@@ -1,0 +1,156 @@
+# ===========================================================================
+# LAMMPS Input Script: Kob-Andersen 3D Binary LJ Equilibration
+# Reference: Zeng et al., J. Chem. Phys. 163, 084512 (2025)
+#
+# System: 3D KA binary LJ liquid
+#   - Type 1 (big,  b): 13200 particles
+#   - Type 2 (small, s):  3300 particles
+#   - Ratio 4:1, total N = 16500
+#   - Number density rho = 1.2  -> box length L = (N/rho)^(1/3) ~ 22.44
+#
+# LJ parameters (sigma_bb=1, epsilon_bb=1, m=1):
+#   bb: eps=1.0, sig=1.0  | bs: eps=1.5, sig=0.8  | ss: eps=0.5, sig=0.88
+#   r_cut = 2.5 sigma_bb for ALL pairs; potential shifted to zero at cutoff.
+#
+# Cooling protocol:
+#   Stage 0: minimize (remove worst random overlaps)
+#   Stage 1: NVT T=2.0, 50000  steps, dt=0.005  (~250  tau_0)
+#   Stage 2: NVT T=1.0, 100000 steps, dt=0.005  (~500  tau_0)
+#   Stage 3: NVT T=0.45, 500000 steps, dt=0.005 (~2500 tau_0) <- target
+#
+# Output:
+#   restart.equil         : binary restart for shear runs
+#   msd_equilibration.dat : MSD vs time to verify equilibration
+#   thermo printed to log every 5000 steps
+# ===========================================================================
+
+# ===========================
+# BASIC SETUP
+# ===========================
+units       lj
+atom_style  atomic
+dimension   3
+boundary    p p p
+
+# ===========================
+# PARAMETERS
+# ===========================
+variable  Nb    equal  13200
+variable  Ns    equal   3300
+variable  N     equal  v_Nb+v_Ns
+
+variable  rho   equal  1.2
+variable  L     equal  (v_N/v_rho)^(1.0/3.0)
+
+variable  T1    equal  2.0
+variable  T2    equal  1.0
+variable  T3    equal  0.45
+
+variable  DT    equal  0.005
+variable  DAMP  equal  100.0*v_DT
+
+variable  seed1 equal  12345
+variable  seed2 equal  67890
+variable  seed3 equal  54321
+
+# ===========================
+# SIMULATION BOX
+# ===========================
+region    simbox  block  0 ${L}  0 ${L}  0 ${L}
+create_box  2  simbox
+
+# ===========================
+# ATOM CREATION
+# ===========================
+create_atoms  1  random  ${Nb}  ${seed1}  NULL
+create_atoms  2  random  ${Ns}  ${seed2}  NULL
+
+mass  1  1.0
+mass  2  1.0
+
+# ===========================
+# INTERATOMIC POTENTIAL
+# ===========================
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+# ===========================
+# NEIGHBOR LIST
+# ===========================
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+# ===========================
+# DIAGNOSTICS
+# ===========================
+compute  myMSD  all  msd
+
+thermo        5000
+thermo_style  custom  step  temp  press  pe  etotal  c_myMSD[4]
+thermo_modify  flush  yes
+
+# ===========================
+# STAGE 0: ENERGY MINIMIZATION
+# ===========================
+# Random placement creates severe overlaps.
+# ftol=1.0 (permissive) exits quickly; NVT at T=2.0 finishes equilibration.
+print ">>> Stage 0: Energy minimization <<<"
+minimize  0.0  1.0  1000  10000
+
+velocity  all  create  ${T1}  ${seed3}  dist  gaussian  mom  yes  rot  yes
+
+# ===========================
+# STAGE 1: NVT T=2.0, 50000 steps
+# ===========================
+print ">>> Stage 1: NVT T=2.0, 50000 steps <<<"
+timestep  ${DT}
+fix  nvt_s1  all  nvt  temp  ${T1}  ${T1}  ${DAMP}
+run  50000
+unfix  nvt_s1
+
+# ===========================
+# STAGE 2: NVT T=1.0, 100000 steps
+# ===========================
+print ">>> Stage 2: NVT T=1.0, 100000 steps <<<"
+fix  nvt_s2  all  nvt  temp  ${T2}  ${T2}  ${DAMP}
+run  100000
+unfix  nvt_s2
+
+# ===========================
+# STAGE 3: NVT T=0.45, 500000 steps
+# ===========================
+print ">>> Stage 3: NVT T=0.45, 500000 steps <<<"
+fix  nvt_s3  all  nvt  temp  ${T3}  ${T3}  ${DAMP}
+
+# MSD output every 1000 steps: verify cage behavior
+# Nevery=1000, Nrepeat=1, Nfreq=1000 -> one instantaneous value per 1000 steps
+fix  msd_out  all  ave/time  1000  1  1000  c_myMSD[4] &
+     file  msd_equilibration.dat &
+     title1  "# MSD during equilibration at T=0.45" &
+     title2  "# Timestep   MSD_total"
+
+run  500000
+
+unfix  msd_out
+unfix  nvt_s3
+
+# ===========================
+# WRITE RESTART
+# ===========================
+print ">>> Writing restart.equil <<<"
+write_restart  restart.equil
+
+# ===========================
+# DENSITY CHECK
+# ===========================
+variable  rho_actual  equal  v_N/(v_L*v_L*v_L)
+variable  drho        equal  abs(v_rho_actual-1.2)
+print "Density: rho = ${rho_actual}  (target 1.2,  error ${drho})"
+if "${drho} > 0.01" then &
+    "print 'FATAL: density error exceeds 0.01'" &
+    "quit 1"
+print "Density check PASSED."
+print "Equilibration complete. Restart written to restart.equil"

@@ -1,0 +1,34 @@
+mpirun -np 6 lmp -in in.equilibrate
+mpirun -np 6 lmp -in in.shear_template -var SHEAR_RATE 0.015 -var DT 0.005 -var SEED 12345 -log log.shear_0.015
+mpirun -np 6 lmp -in in.shear_template -var SHEAR_RATE 0.015 -var DT 0.005 -var SEED 12345 -log log.shear_0.015
+
+
+mpiexec -n 22 lmp -in in.shear_template -var SHEAR_RATE 0.003 -var DT 0.005
+mpiexec -n 22 lmp -in in.shear_template -var SHEAR_RATE 0.005 -var DT 0.005
+mpiexec -n 22 lmp -in in.shear_template -var SHEAR_RATE 0.015 -var DT 0.005
+mpiexec -n 22 lmp -in in.shear_template -var SHEAR_RATE 0.030 -var DT 0.005
+mpiexec -n 22 lmp -in in.shear_template -var SHEAR_RATE 0.060 -var DT 0.005
+
+
+python compute_fsqt.py     --dump      ../lammps/dump.equil_coarse.lammpstrj     --dump_fine ../lammps/dump.equil_fine.lammpstrj     --rate 0.0     --n_skip 5
+
+
+mpiexec -n 22 lmp -in in.equil_fsqt.lammps -log log.equil_fsqt
+
+python compute_gr.py --dump ../lammps/dump.equil_coarse.lammpstrj --n_frames 50
+
+
+python compute_fsqt.py ^
+    --dump      ../lammps/dump.shear_0.003.lammpstrj ^
+                ../lammps/dump.shear_0.005.lammpstrj ^
+                ../lammps/dump.shear_0.015.lammpstrj ^
+                ../lammps/dump.shear_0.030.lammpstrj ^
+                ../lammps/dump.shear_0.060.lammpstrj ^
+    --dump_fine ../lammps/dump.fine_0.003.lammpstrj ^
+                ../lammps/dump.fine_0.005.lammpstrj ^
+                ../lammps/dump.fine_0.015.lammpstrj ^
+                ../lammps/dump.fine_0.030.lammpstrj ^
+                ../lammps/dump.fine_0.060.lammpstrj ^
+    --rate 0.003 0.005 0.015 0.030 0.060 ^
+    --n_skip 5
+

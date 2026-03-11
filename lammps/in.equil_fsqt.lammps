@@ -1,0 +1,68 @@
+# ===========================================================================
+# LAMMPS Input Script: Equilibrium NVT Production Run for F_s(q,t)
+# Reads restart.equil, runs additional NVT at T=0.45
+#
+# Dump strategy (two timescales):
+#   fine   dump: every 10 steps, 4000 steps  -> dt=0.05 tau_0, covers 0-20 tau_0
+#   coarse dump: every 1000 steps, 500000 steps -> dt=5 tau_0, covers 0-2500 tau_0
+#   tau_alpha(T=0.45) ~ 500 tau_0, so coarse covers ~5 * tau_alpha
+#
+# Usage:
+#   mpiexec -n 22 lmp -in in.equil_fsqt.lammps -log log.equil_fsqt
+# ===========================================================================
+
+units       lj
+atom_style  atomic
+
+read_restart  restart.equil
+
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+variable  DT    equal  0.005
+variable  DAMP  equal  100.0*${DT}
+variable  TEMP  equal  0.45
+
+timestep  ${DT}
+
+fix  nvt_prod  all  nvt  temp  ${TEMP}  ${TEMP}  ${DAMP}
+
+thermo        10000
+thermo_style  custom  step  temp  press  pe
+thermo_modify  flush  yes
+
+# ── fine dump: 前 4000 步，每 10 步一帧 ──
+# dt_fine = 10 * 0.005 = 0.05 tau_0，覆盖弹道区 + beta 平台
+dump  fine_dump  all  custom  10 &
+      dump.equil_fine.lammpstrj &
+      id  type  x  y  z  ix  iy  iz
+dump_modify  fine_dump  sort  id  flush  yes
+
+print "=== fine dump: 4000 steps (20 tau_0) ==="
+run  4000
+undump  fine_dump
+
+reset_timestep  0
+
+# ── coarse dump: 完整生产段，每 1000 步一帧 ──
+# dt_coarse = 1000 * 0.005 = 5 tau_0，覆盖到 2500 tau_0 ~ 5 * tau_alpha
+dump  coarse_dump  all  custom  1000 &
+      dump.equil_coarse.lammpstrj &
+      id  type  x  y  z  ix  iy  iz
+dump_modify  coarse_dump  sort  id  flush  yes
+
+compute  myRDF all rdf 500 1 1 1 2 2 2  # 500 bins, AA AB BB
+fix      rdfAve all ave/time 1000 1 1000 c_myRDF[*] &
+         file rdf.equil.dat mode vector
+
+
+print "=== coarse dump: 500000 steps (2500 tau_0) ==="
+run  1000000
+
+print "Equilibrium production run complete."

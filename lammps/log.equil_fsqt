@@ -1,0 +1,277 @@
+LAMMPS (10 Dec 2025)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread.
+  using 1 OpenMP thread(s) per MPI task
+Loaded 1 plugins from C:\Users\fangy\AppData\Local\LAMMPS 64-bit 10Dec2025-MSMPI\plugins
+# ===========================================================================
+# LAMMPS Input Script: Equilibrium NVT Production Run for F_s(q,t)
+# Reads restart.equil, runs additional NVT at T=0.45
+#
+# Dump strategy (two timescales):
+#   fine   dump: every 10 steps, 4000 steps  -> dt=0.05 tau_0, covers 0-20 tau_0
+#   coarse dump: every 1000 steps, 500000 steps -> dt=5 tau_0, covers 0-2500 tau_0
+#   tau_alpha(T=0.45) ~ 500 tau_0, so coarse covers ~5 * tau_alpha
+#
+# Usage:
+#   mpiexec -n 22 lmp -in in.equil_fsqt.lammps -log log.equil_fsqt
+# ===========================================================================
+
+units       lj
+atom_style  atomic
+
+read_restart  restart.equil
+Reading restart file ...
+  restart file = 7 Feb 2024, LAMMPS = 10 Dec 2025
+WARNING: Restart file used different # of processors: 6 vs. 22 (src/read_restart.cpp:630)
+  restoring atom style atomic from restart
+  orthogonal box = (0 0 0) to (23.957099 23.957099 23.957099)
+  1 by 2 by 11 MPI processor grid
+  restoring pair style lj/cut from restart
+  16500 atoms
+  read_restart CPU = 0.005 seconds
+
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+variable  DT    equal  0.005
+variable  DAMP  equal  100.0*${DT}
+variable  DAMP  equal  100.0*0.005
+variable  TEMP  equal  0.45
+
+timestep  ${DT}
+timestep  0.005
+
+fix  nvt_prod  all  nvt  temp  ${TEMP}  ${TEMP}  ${DAMP}
+fix  nvt_prod  all  nvt  temp  0.45  ${TEMP}  ${DAMP}
+fix  nvt_prod  all  nvt  temp  0.45  0.45  ${DAMP}
+fix  nvt_prod  all  nvt  temp  0.45  0.45  0.5
+
+thermo        10000
+thermo_style  custom  step  temp  press  pe
+thermo_modify  flush  yes
+
+# ── fine dump: 前 4000 步，每 10 步一帧 ──
+# dt_fine = 10 * 0.005 = 0.05 tau_0，覆盖弹道区 + beta 平台
+dump  fine_dump  all  custom  10       dump.equil_fine.lammpstrj       id  type  x  y  z  ix  iy  iz
+dump_modify  fine_dump  sort  id  flush  yes
+
+print "=== fine dump: 4000 steps (20 tau_0) ==="
+=== fine dump: 4000 steps (20 tau_0) ===
+run  4000
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Unused restart file peratom fix info:
+  fix style: STORE/ATOM, fix ID: myMSD_COMPUTE_STORE
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 2.8
+  ghost atom cutoff = 2.8
+  binsize = 1.4, bins = 18 18 18
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 3.301 | 3.303 | 3.305 Mbytes
+   Step          Temp          Press          PotEng    
+    651000   0.44829928     3.0419146     -7.1490623    
+    655000   0.4505015      2.9816733     -7.1570004    
+Loop time of 16.5428 on 22 procs for 4000 steps with 16500 atoms
+
+Performance: 104456.369 tau/day, 241.797 timesteps/s, 3.990 Matom-step/s
+86.9% CPU use with 22 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 3.5295     | 3.7013     | 3.8692     |   4.5 | 22.37
+Neigh   | 0.90656    | 0.94448    | 0.97264    |   1.7 |  5.71
+Comm    | 4.7881     | 5.1453     | 5.4128     |   6.2 | 31.10
+Output  | 2.1446     | 3.0716     | 4.0802     |  33.0 | 18.57
+Modify  | 1.5013     | 1.6456     | 1.8682     |   6.7 |  9.95
+Other   |            | 2.034      |            |       | 12.30
+
+Nlocal:            750 ave         763 max         739 min
+Histogram: 3 1 1 6 0 4 3 2 0 2
+Nghost:        4103.41 ave        4125 max        4071 min
+Histogram: 2 0 1 1 4 2 4 2 4 2
+Neighs:        41264.1 ave       44052 max       37994 min
+Histogram: 1 1 2 2 4 2 3 3 3 1
+
+Total # of neighbors = 907811
+Ave neighs/atom = 55.018848
+Neighbor list builds = 394
+Dangerous builds = 0
+undump  fine_dump
+
+reset_timestep  0
+
+# ── coarse dump: 完整生产段，每 1000 步一帧 ──
+# dt_coarse = 1000 * 0.005 = 5 tau_0，覆盖到 2500 tau_0 ~ 5 * tau_alpha
+dump  coarse_dump  all  custom  1000       dump.equil_coarse.lammpstrj       id  type  x  y  z  ix  iy  iz
+dump_modify  coarse_dump  sort  id  flush  yes
+
+compute  myRDF all rdf 500 1 1 1 2 2 2  # 500 bins, AA AB BB
+fix      rdfAve all ave/time 1000 1 1000 c_myRDF[*]          file rdf.equil.dat mode vector
+
+
+print "=== coarse dump: 500000 steps (2500 tau_0) ==="
+=== coarse dump: 500000 steps (2500 tau_0) ===
+run  1000000
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 2.8
+  ghost atom cutoff = 2.8
+  binsize = 1.4, bins = 18 18 18
+  2 neighbor lists, perpetual/occasional/extra = 1 1 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+  (2) compute rdf, occasional, copy from (1)
+      attributes: half, newton on
+      pair build: copy
+      stencil: none
+      bin: none
+Per MPI rank memory allocation (min/avg/max) = 3.682 | 3.684 | 3.687 Mbytes
+   Step          Temp          Press          PotEng    
+         0   0.4505015      2.9816733     -7.1570004    
+     10000   0.45394784     3.006326      -7.1558464    
+     20000   0.45394213     3.0394649     -7.1502779    
+     30000   0.44599758     2.985869      -7.1573146    
+     40000   0.44961615     2.9679335     -7.1591066    
+     50000   0.45504662     2.8953368     -7.1723523    
+     60000   0.45124117     3.0058641     -7.1562912    
+     70000   0.45176203     3.040796      -7.1525911    
+     80000   0.45133042     2.9860508     -7.1649636    
+     90000   0.44691377     2.9719637     -7.162663     
+    100000   0.4526649      3.0031703     -7.1563677    
+    110000   0.45115646     2.9854191     -7.158391     
+    120000   0.44650757     2.9529208     -7.1645492    
+    130000   0.45086827     2.9809852     -7.1599396    
+    140000   0.4513         3.0097099     -7.1522488    
+    150000   0.44568082     2.9603437     -7.1605219    
+    160000   0.44988782     2.9484607     -7.1646902    
+    170000   0.44417565     2.9983468     -7.1551062    
+    180000   0.4542279      2.9725985     -7.1637258    
+    190000   0.44933172     2.9805068     -7.1581685    
+    200000   0.45313432     2.9939917     -7.1599797    
+    210000   0.45063078     2.8927008     -7.1739618    
+    220000   0.45442238     2.9703069     -7.1600217    
+    230000   0.44985095     2.9439672     -7.1644745    
+    240000   0.44438751     2.9745883     -7.160624     
+    250000   0.45020424     2.9463949     -7.168149     
+    260000   0.44869176     2.9905074     -7.1589474    
+    270000   0.44788964     2.9763807     -7.1602255    
+    280000   0.4487498      2.946216      -7.1647755    
+    290000   0.44903406     3.006538      -7.1593572    
+    300000   0.45681827     2.9523066     -7.1651467    
+    310000   0.45446945     2.9554996     -7.1634242    
+    320000   0.45182073     2.9703627     -7.1614724    
+    330000   0.44915889     2.9354833     -7.1653799    
+    340000   0.44801692     2.9360973     -7.1666074    
+    350000   0.45354182     2.9230993     -7.1680711    
+    360000   0.45324661     2.9223479     -7.1696267    
+    370000   0.45807899     2.936234      -7.1679966    
+    380000   0.45094138     2.9075804     -7.1697412    
+    390000   0.44902743     2.9285768     -7.1682505    
+    400000   0.45197654     2.9235308     -7.1700058    
+    410000   0.45273077     2.948902      -7.1660095    
+    420000   0.44537761     2.9132126     -7.1728224    
+    430000   0.45085097     2.8791285     -7.174331     
+    440000   0.45554918     2.9366523     -7.1668462    
+    450000   0.44870483     2.9700755     -7.1636906    
+    460000   0.45069034     2.9047555     -7.1719067    
+    470000   0.44499809     2.8836801     -7.1735626    
+    480000   0.4525426      2.9449009     -7.1637998    
+    490000   0.44547953     2.9765706     -7.1602219    
+    500000   0.44565186     2.9193154     -7.166119     
+    510000   0.45018711     2.9312529     -7.1659021    
+    520000   0.45276345     2.9570271     -7.1623465    
+    530000   0.44512498     2.9228997     -7.1659684    
+    540000   0.45091464     2.8998815     -7.1705819    
+    550000   0.45097638     2.9641339     -7.163308     
+    560000   0.45024339     2.9900174     -7.1592846    
+    570000   0.45547289     2.937983      -7.1691627    
+    580000   0.45480463     2.9062567     -7.1727819    
+    590000   0.45016455     2.9429233     -7.1638942    
+    600000   0.45163898     2.9845606     -7.1600883    
+    610000   0.44538605     2.9525646     -7.1627244    
+    620000   0.44965675     2.937583      -7.1684001    
+    630000   0.45250338     2.9146841     -7.1685709    
+    640000   0.45525728     2.9467925     -7.1656032    
+    650000   0.45020666     2.9429893     -7.1657665    
+    660000   0.44962698     2.9801678     -7.1622826    
+    670000   0.45208676     2.9522523     -7.1657166    
+    680000   0.4500751      2.9660578     -7.164512     
+    690000   0.4484667      2.9426597     -7.1673777    
+    700000   0.45181843     2.9355667     -7.1684606    
+    710000   0.45506422     2.9517598     -7.1664807    
+    720000   0.44945858     2.9121511     -7.1696048    
+    730000   0.44726504     2.9666588     -7.1591415    
+    740000   0.45084897     2.9716541     -7.1609853    
+    750000   0.45062481     2.9346435     -7.1694243    
+    760000   0.44824802     2.9779821     -7.1650273    
+    770000   0.44924194     2.9305657     -7.1710597    
+    780000   0.43935826     2.8983513     -7.1710283    
+    790000   0.45288117     2.9518583     -7.166143     
+    800000   0.44683299     2.9692517     -7.159508     
+    810000   0.45231357     3.002615      -7.1600608    
+    820000   0.45426382     2.932278      -7.1682161    
+    830000   0.44826459     2.9583426     -7.162995     
+    840000   0.44670251     2.9722948     -7.1638217    
+    850000   0.44590742     2.9475274     -7.167971     
+    860000   0.44484361     2.9406289     -7.167467     
+    870000   0.45021158     2.959282      -7.1653527    
+    880000   0.44797752     2.9102246     -7.1714541    
+    890000   0.44885167     2.9385402     -7.1649967    
+    900000   0.45015182     2.952534      -7.1681522    
+    910000   0.45152421     2.9797169     -7.1642752    
+    920000   0.45266502     2.9284296     -7.1708961    
+    930000   0.45003164     2.8954537     -7.171936     
+    940000   0.44819007     3.0187057     -7.1513124    
+    950000   0.44315793     2.9115306     -7.1730946    
+    960000   0.45158938     2.9496225     -7.1674932    
+    970000   0.45393863     2.9579778     -7.1634457    
+    980000   0.45094662     2.9584285     -7.1629219    
+    990000   0.44947224     2.8974912     -7.1728768    
+   1000000   0.44508295     2.8685599     -7.1739477    
+Loop time of 2163.8 on 22 procs for 1000000 steps with 16500 atoms
+
+Performance: 199648.997 tau/day, 462.150 timesteps/s, 7.625 Matom-step/s
+92.0% CPU use with 22 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 798.1      | 834.66     | 855.85     |  50.3 | 38.57
+Neigh   | 215.01     | 220.69     | 225.65     |  19.0 | 10.20
+Comm    | 784.01     | 803.28     | 830.2      |  43.0 | 37.12
+Output  | 7.2049     | 9.1441     | 11.08      |  38.1 |  0.42
+Modify  | 171.95     | 188.26     | 212.89     |  89.1 |  8.70
+Other   |            | 107.8      |            |       |  4.98
+
+Nlocal:            750 ave         763 max         735 min
+Histogram: 3 1 1 3 1 2 2 3 4 2
+Nghost:        4099.77 ave        4128 max        4070 min
+Histogram: 3 1 1 2 2 3 5 1 3 1
+Neighs:        41275.2 ave       43263 max       38174 min
+Histogram: 1 1 1 3 2 0 4 4 2 4
+
+Total # of neighbors = 908055
+Ave neighs/atom = 55.033636
+Neighbor list builds = 98216
+Dangerous builds = 0
+
+print "Equilibrium production run complete."
+Equilibrium production run complete.
+Total wall time: 0:36:20

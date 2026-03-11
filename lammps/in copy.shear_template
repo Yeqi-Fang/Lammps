@@ -1,0 +1,222 @@
+# ===========================================================================
+# LAMMPS Input Script: SLLOD Shear Production Run (Template)
+# Reference: Zeng et al., J. Chem. Phys. 163, 084512 (2025)
+#
+# Usage (example):
+#   mpirun -np 4 lmp -in in.shear_template \
+#       -var SHEAR_RATE 0.01 -var DT 0.003 -var SEED 12345 \
+#       -log log.shear_0.01
+#
+# Required command-line variables:
+#   SHEAR_RATE  : shear rate (LJ units, tau_0^{-1})
+#   DT          : timestep  (0.003 for gamma_dot <= 0.01; 0.001 otherwise)
+#   SEED        : random seed (reserved; not used in current version)
+#
+# SLLOD physics summary:
+#   - Lees-Edwards BC: periodic box sheared in xy plane
+#     (flow x, gradient y, vorticity z)
+#   - fix deform:     d(xy)/dt = gamma_dot * Ly  (remap v required)
+#   - fix nvt/sllod:  SLLOD EOM + Nose-Hoover thermostat in peculiar frame
+#   - Viscosity:      eta = -<P_xy> / gamma_dot
+#     (P_xy in LAMMPS = full stress, positive in compression sign convention;
+#      for shear flow: P_xy = sigma_xy = -eta * gamma_dot, so eta = -P_xy/gamma_dot)
+#
+# Protocol:
+#   Pre-run:    accumulated strain Delta_gamma = 20  (reach steady state)
+#   Production: accumulated strain Delta_gamma = 50  (data collection)
+#
+# Output files (written to working directory, moved by bash script):
+#   dump.shear_${SHEAR_RATE}.lammpstrj  : atom trajectories every 0.5/gamma_dot
+#   thermo.shear_${SHEAR_RATE}.dat      : P_xy time series every 100 steps
+#   visc_blockave.shear_${SHEAR_RATE}.dat : block-averaged -<P_xy>
+# ===========================================================================
+
+# ===========================
+# BASIC SETUP
+# ===========================
+units       lj
+atom_style  atomic
+
+# ===========================
+# READ EQUILIBRATED CONFIG
+# ===========================
+# Restores: positions, velocities, masses, box geometry,
+#           pair_style and pair_coeff from the equilibration run.
+read_restart  restart.equil
+
+# Re-specify pair potential explicitly (defensive: ensures correct parameters
+# even if restart was written with a different LAMMPS version).
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+# Rebuild neighbor list from scratch (box geometry may change below)
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+# ===========================
+# DERIVED PARAMETERS
+# ===========================
+# Thermostat damping = 100 * dt
+# (100 steps per oscillation period; standard Nose-Hoover choice)
+variable  DAMP        equal  100.0*${DT}
+
+# Target temperature
+variable  TEMP        equal  0.45
+
+# Pre-run steps: strain = gamma_dot * t = gamma_dot * (N_steps * dt) = 20
+# => N_pre = round(20 / (gamma_dot * dt))
+variable  N_pre       equal  round(20.0/(${SHEAR_RATE}*${DT}))
+
+# Production steps: strain = 50
+# => N_prod = round(50 / (gamma_dot * dt))
+variable  N_prod      equal  round(50.0/(${SHEAR_RATE}*${DT}))
+
+# Dump interval: Delta_t_dump = 0.5 / gamma_dot time units
+# => dump_every = round(0.5 / (gamma_dot * dt)) steps
+# This gives ~100 trajectory frames per strain unit (sufficient for cage jump analysis)
+variable  DUMP_EVERY  equal  round(0.02/(${SHEAR_RATE}*${DT}))
+
+# ===========================
+# CONVERT BOX TO TRICLINIC
+# ===========================
+# The equilibrated restart has an orthogonal box.
+# fix deform with 'xy erate' requires a triclinic box to store the xy tilt.
+# change_box converts orthogonal -> triclinic without moving atoms.
+change_box  all  triclinic
+
+# ===========================
+# TIMESTEP
+# ===========================
+timestep  ${DT}
+
+# ===========================
+# SLLOD SHEAR FIXES
+# ===========================
+
+# --- fix deform: apply Lees-Edwards boundary condition ---
+# 'xy erate ${SHEAR_RATE}' ramps the xy tilt angle at rate gamma_dot,
+# producing a linear shear flow vx = gamma_dot * y.
+#
+# 'remap v' is REQUIRED when using fix nvt/sllod:
+#   When an atom crosses the y boundary, its vx is adjusted by +/- gamma_dot*Ly
+#   to maintain a smooth velocity profile across the periodic boundary.
+#   fix nvt/sllod uses this to compute the streaming velocity for thermostatting.
+#
+# 'flip yes' (default): when |xy| > Lx/2, the box is flipped to an equivalent
+#   periodic image, preventing the box from becoming arbitrarily skewed.
+#   This is the standard Lees-Edwards treatment for long runs.
+#
+fix  shear_deform  all  deform  1  xy  erate  ${SHEAR_RATE}  remap  v  flip  yes
+
+# --- fix nvt/sllod: SLLOD equations of motion with Nose-Hoover thermostat ---
+# Integrates: dp_i/dt = F_i - (dxz_dot)*p_yi*xhat - xi*p_i
+# where dxz_dot = gamma_dot (velocity gradient).
+# Internally creates compute temp/deform to compute temperature with
+# streaming velocity subtracted.
+# NOTE: this fix REQUIRES that fix deform uses 'remap v' (enforced by LAMMPS).
+#
+fix  sllod_nvt  all  nvt/sllod  temp  ${TEMP}  ${TEMP}  ${DAMP}
+
+# ===========================
+# LOG THERMO (to log file)
+# ===========================
+thermo        1000
+thermo_style  custom  step  temp  press  pxy
+thermo_modify  flush  yes
+
+# ===========================
+# PRE-RUN: REACH STEADY STATE (Delta_gamma = 20)
+# ===========================
+# No file output during pre-run to avoid polluting data files with transients.
+# Low shear rates (e.g., 0.001) require N_pre = 6,666,667 steps — be patient.
+print "=========================================="
+print "PRE-RUN"
+print "  gamma_dot   = ${SHEAR_RATE}"
+print "  dt          = ${DT}"
+print "  N_pre steps = ${N_pre}  (strain = 20)"
+print "=========================================="
+run  ${N_pre}
+
+# ===========================
+# RESET STEP COUNTER
+# ===========================
+# Production data starts cleanly at step 0.
+# fix deform and fix sllod_nvt continue uninterrupted.
+reset_timestep  0
+
+# ===========================
+# PRODUCTION OUTPUT SETUP
+# ===========================
+# All output fixes are defined AFTER reset_timestep so step numbers in output
+# files run from 0 to N_prod.
+
+# --- Equal-style variables for fix ave/time ---
+# These are evaluated at sample time by fix ave/time.
+# Note: variable names chosen to avoid confusion with LAMMPS keywords.
+variable  samp_step  equal  step
+variable  samp_temp  equal  temp
+variable  samp_press equal  press
+variable  samp_pxy   equal  pxy
+variable  samp_npxy  equal  -pxy    # -P_xy for viscosity: eta = (-P_xy)/gamma_dot
+
+# --- Thermo output to file: instantaneous values every 100 steps ---
+# Nevery=100, Nrepeat=1, Nfreq=100
+# => sample at steps 100, 200, 300, ... (instantaneous, not averaged)
+# Used by compute_viscosity.py to calculate steady-state eta.
+fix  file_thermo  all  ave/time  100  1  100 &
+     v_samp_step  v_samp_temp  v_samp_press  v_samp_pxy &
+     file  thermo.shear_${SHEAR_RATE}.dat &
+     title1  "# Instantaneous thermo: gamma_dot=${SHEAR_RATE} T=0.45 dt=${DT}" &
+     title2  "# step  temp  press  pxy"
+
+# --- Block-averaged -P_xy for viscosity estimation ---
+# Nevery=1, Nrepeat=100, Nfreq=100
+# => average over consecutive 100-step blocks; output every 100 steps.
+# eta_block = (-P_xy block average) / gamma_dot
+fix  file_visc  all  ave/time  1  100  100 &
+     v_samp_step  v_samp_npxy &
+     file  visc_blockave.shear_${SHEAR_RATE}.dat &
+     title1  "# Block-averaged -<P_xy>: gamma_dot=${SHEAR_RATE}" &
+     title2  "# step  -pxy_block100"
+
+# --- Atom trajectory dump ---
+# Output: id type x y z vx vy vz for all atoms
+# Frequency: every DUMP_EVERY steps = 0.5/gamma_dot time units
+# => ~100 snapshots per strain unit during production (strain=50 => ~5000 frames)
+# Used by compute_msd_nonaffine.py and cage_jump_detection.py
+dump  atom_traj  all  custom  ${DUMP_EVERY} &
+      dump.shear_${SHEAR_RATE}.lammpstrj &
+      id  type  x  y  z  ix  iy  iz  vx  vy  vz
+
+dump_modify  atom_traj  sort  id  flush  yes
+
+# ===========================
+# PRODUCTION RUN (Delta_gamma = 50)
+# ===========================
+print "=========================================="
+print "PRODUCTION RUN"
+print "  gamma_dot    = ${SHEAR_RATE}"
+print "  N_prod steps = ${N_prod}  (strain = 50)"
+print "  dump_every   = ${DUMP_EVERY}  steps"
+print "=========================================="
+
+# --- 新增：前 2000 步密集 dump，用于 MSD 平台检测 ---
+# Δt_fine = 10 × dt = 0.05 τ₀，覆盖 ballistic→plateau 转变
+# 总时间 = 2000 × 0.005 = 10 τ₀，足以看到平台
+dump  msd_fine  all  custom  10 &
+      dump.fine_${SHEAR_RATE}.lammpstrj &
+      id  type  x  y  z  ix  iy  iz
+dump_modify  msd_fine  sort  id  flush  yes
+
+run   2000   # 只跑 10 τ₀，用于 lc² 检测
+
+undump  msd_fine
+reset_timestep  0   # 重置，让主 dump 从 step=0 开始
+
+
+run  ${N_prod}
+
+print "Shear run complete: gamma_dot = ${SHEAR_RATE}"

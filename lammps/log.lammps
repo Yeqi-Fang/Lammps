@@ -1,0 +1,203 @@
+LAMMPS (10 Dec 2025)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread.
+  using 1 OpenMP thread(s) per MPI task
+Loaded 1 plugins from C:\Users\fangy\AppData\Local\LAMMPS 64-bit 10Dec2025-MSMPI\plugins
+# ===========================================================================
+# LAMMPS Input Script: SLLOD Shear Production Run (Template)
+# Reference: Zeng et al., J. Chem. Phys. 163, 084512 (2025)
+#
+# Usage (example):
+#   mpirun -np 4 lmp -in in.shear_template \
+#       -var SHEAR_RATE 0.01 -var DT 0.003 -var SEED 12345 \
+#       -log log.shear_0.01
+#
+# Required command-line variables:
+#   SHEAR_RATE  : shear rate (LJ units, tau_0^{-1})
+#   DT          : timestep  (0.003 for gamma_dot <= 0.01; 0.001 otherwise)
+#   SEED        : random seed (reserved; not used in current version)
+#
+# SLLOD physics summary:
+#   - Lees-Edwards BC: periodic box sheared in xy plane
+#     (flow x, gradient y, vorticity z)
+#   - fix deform:     d(xy)/dt = gamma_dot * Ly  (remap v required)
+#   - fix nvt/sllod:  SLLOD EOM + Nose-Hoover thermostat in peculiar frame
+#   - Viscosity:      eta = -<P_xy> / gamma_dot
+#     (P_xy in LAMMPS = full stress, positive in compression sign convention;
+#      for shear flow: P_xy = sigma_xy = -eta * gamma_dot, so eta = -P_xy/gamma_dot)
+#
+# Protocol:
+#   Pre-run:    accumulated strain Delta_gamma = 20  (reach steady state)
+#   Production: accumulated strain Delta_gamma = 50  (data collection)
+#
+# Output files (written to working directory, moved by bash script):
+#   dump.shear_${SHEAR_RATE}.lammpstrj  : atom trajectories every 0.5/gamma_dot
+#   thermo.shear_${SHEAR_RATE}.dat      : P_xy time series every 100 steps
+#   visc_blockave.shear_${SHEAR_RATE}.dat : block-averaged -<P_xy>
+# ===========================================================================
+
+# ===========================
+# BASIC SETUP
+# ===========================
+units       lj
+atom_style  atomic
+
+# ===========================
+# READ EQUILIBRATED CONFIG
+# ===========================
+# Restores: positions, velocities, masses, box geometry,
+#           pair_style and pair_coeff from the equilibration run.
+read_restart  restart.equil
+Reading restart file ...
+  restart file = 7 Feb 2024, LAMMPS = 10 Dec 2025
+WARNING: Restart file used different # of processors: 6 vs. 24 (src/read_restart.cpp:630)
+  restoring atom style atomic from restart
+  orthogonal box = (0 0 0) to (23.957099 23.957099 23.957099)
+  2 by 3 by 4 MPI processor grid
+  restoring pair style lj/cut from restart
+  16500 atoms
+  read_restart CPU = 0.006 seconds
+
+# Re-specify pair potential explicitly (defensive: ensures correct parameters
+# even if restart was written with a different LAMMPS version).
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+# Rebuild neighbor list from scratch (box geometry may change below)
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+# ===========================
+# DERIVED PARAMETERS
+# ===========================
+# Thermostat damping = 100 * dt
+# (100 steps per oscillation period; standard Nose-Hoover choice)
+variable  DAMP        equal  100.0*${DT}
+variable  DAMP        equal  100.0*0.005
+
+# Target temperature
+variable  TEMP        equal  0.45
+
+# Pre-run steps: strain = gamma_dot * t = gamma_dot * (N_steps * dt) = 20
+# => N_pre = round(20 / (gamma_dot * dt))
+variable  N_pre       equal  round(20.0/(${SHEAR_RATE}*${DT}))
+variable  N_pre       equal  round(20.0/(0.060*${DT}))
+variable  N_pre       equal  round(20.0/(0.060*0.005))
+
+# Production steps: strain = 50
+# => N_prod = round(50 / (gamma_dot * dt))
+variable  N_prod      equal  round(50.0/(${SHEAR_RATE}*${DT}))
+variable  N_prod      equal  round(50.0/(0.060*${DT}))
+variable  N_prod      equal  round(50.0/(0.060*0.005))
+
+# Dump interval: Delta_t_dump = 0.5 / gamma_dot time units
+# => dump_every = round(0.5 / (gamma_dot * dt)) steps
+# This gives ~100 trajectory frames per strain unit (sufficient for cage jump analysis)
+variable  DUMP_EVERY  equal  round(0.02/(${SHEAR_RATE}*${DT}))
+variable  DUMP_EVERY  equal  round(0.02/(0.060*${DT}))
+variable  DUMP_EVERY  equal  round(0.02/(0.060*0.005))
+
+# ===========================
+# CONVERT BOX TO TRICLINIC
+# ===========================
+# The equilibrated restart has an orthogonal box.
+# fix deform with 'xy erate' requires a triclinic box to store the xy tilt.
+# change_box converts orthogonal -> triclinic without moving atoms.
+change_box  all  triclinic
+Changing box ...
+  triclinic box = (0 0 0) to (23.957099 23.957099 23.957099) with tilt (0 0 0)
+
+# ===========================
+# TIMESTEP
+# ===========================
+timestep  ${DT}
+timestep  0.005
+
+# ===========================
+# SLLOD SHEAR FIXES
+# ===========================
+
+# --- fix deform: apply Lees-Edwards boundary condition ---
+# 'xy erate ${SHEAR_RATE}' ramps the xy tilt angle at rate gamma_dot,
+# producing a linear shear flow vx = gamma_dot * y.
+#
+# 'remap v' is REQUIRED when using fix nvt/sllod:
+#   When an atom crosses the y boundary, its vx is adjusted by +/- gamma_dot*Ly
+#   to maintain a smooth velocity profile across the periodic boundary.
+#   fix nvt/sllod uses this to compute the streaming velocity for thermostatting.
+#
+# 'flip yes' (default): when |xy| > Lx/2, the box is flipped to an equivalent
+#   periodic image, preventing the box from becoming arbitrarily skewed.
+#   This is the standard Lees-Edwards treatment for long runs.
+#
+fix  shear_deform  all  deform  1  xy  erate  ${SHEAR_RATE}  remap  v  flip  yes
+fix  shear_deform  all  deform  1  xy  erate  0.060  remap  v  flip  yes
+
+# --- fix nvt/sllod: SLLOD equations of motion with Nose-Hoover thermostat ---
+# Integrates: dp_i/dt = F_i - (dxz_dot)*p_yi*xhat - xi*p_i
+# where dxz_dot = gamma_dot (velocity gradient).
+# Internally creates compute temp/deform to compute temperature with
+# streaming velocity subtracted.
+# NOTE: this fix REQUIRES that fix deform uses 'remap v' (enforced by LAMMPS).
+#
+fix  sllod_nvt  all  nvt/sllod  temp  ${TEMP}  ${TEMP}  ${DAMP}
+fix  sllod_nvt  all  nvt/sllod  temp  0.45  ${TEMP}  ${DAMP}
+fix  sllod_nvt  all  nvt/sllod  temp  0.45  0.45  ${DAMP}
+fix  sllod_nvt  all  nvt/sllod  temp  0.45  0.45  0.5
+
+# --- Thermo quantities consistent with SLLOD (remove streaming velocity) ---
+compute  Tdeform all temp/deform
+compute  Pdeform all pressure Tdeform
+
+thermo_modify  temp  Tdeform
+thermo_modify  press Pdeform
+
+# ===========================
+# LOG THERMO (to log file)
+# ===========================
+thermo        1000
+thermo_style  custom  step  c_Tdeform  c_Pdeform  c_Pdeform[4]
+WARNING: New thermo_style command, previous thermo_modify settings will be lost (src/output.cpp:1100)
+thermo_modify  flush  yes
+
+# ===========================
+# PRE-RUN: REACH STEADY STATE (Delta_gamma = 20)
+# ===========================
+# No file output during pre-run to avoid polluting data files with transients.
+# Low shear rates (e.g., 0.001) require N_pre = 6,666,667 steps — be patient.
+print "=========================================="
+==========================================
+print "PRE-RUN"
+PRE-RUN
+print "  gamma_dot   = ${SHEAR_RATE}"
+  gamma_dot   = 0.060
+print "  dt          = ${DT}"
+  dt          = 0.005
+print "  N_pre steps = ${N_pre}  (strain = 20)"
+  N_pre steps = 66667  (strain = 20)
+print "=========================================="
+==========================================
+run  ${N_pre}
+run  66667
+Generated 0 of 1 mixed pair_coeff terms from geometric mixing rule
+Unused restart file peratom fix info:
+  fix style: STORE/ATOM, fix ID: myMSD_COMPUTE_STORE
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 2.8
+  ghost atom cutoff = 2.8
+  binsize = 1.4, bins = 18 18 18
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton/tri
+      stencil: half/bin/3d/tri
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 3.198 | 3.2 | 3.201 Mbytes
+   Step       c_Tdeform      c_Pdeform     c_Pdeform[4] 
+    651000   0.68005365     3.320003      -0.029864254  
+    652000   0.44806681     3.5268203     -1.3902111    
+    653000   0.34923755     3.0022531     -1.2769343    
