@@ -1,5 +1,34 @@
-*.npz
-*.lammpstrj
+# Python/editor caches
 __pycache__/
+*.pyc
 .vscode/
+.ipynb_checkpoints/
+
+# Local numeric/simulation data
+*.npz
+*.npy
 *.dat
+*.lammpstrj
+*.lammpstrj.gz
+
+# LAMMPS, Slurm, and restart outputs
+log.*
+*.log
+*.out
+*.err
+restart.*
+slurm-*.out
+
+# Temporary extraction/rendering workspace
+tmp/
+
+# Generated analysis outputs
+analysis/**/*.png
+analysis/**/*.pdf
+analysis/**/*.csv
+analysis/**/*.json
+
+# Zeng reproduction data/results stay local; keep directory placeholders.
+zeng_reproduction/data/**
+!zeng_reproduction/data/**/
+!zeng_reproduction/data/**/.gitkeep
