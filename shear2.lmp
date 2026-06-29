@@ -100,7 +100,8 @@ variable            t_now equal time
 variable            strain equal v_gamma*time
 variable            pxy_out equal pxy
 
-fix                 thermo_out all ave/time 100 1 100 v_t_now v_strain c_2_temp press v_pxy_out file thermo.shear_${gamma}.dat
+variable            press_out equal press
+fix                 thermo_out all ave/time 100 1 100 v_t_now v_strain c_2_temp v_press_out v_pxy_out file thermo.shear_${gamma}.dat
 
 dump 		        1 all custom ${dump_every} dump.shear_${gamma}.lammpstrj id type x y z ix iy iz xu yu zu vx vy vz
 dump_modify         1 sort id flush yes
