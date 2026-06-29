@@ -1,18 +1,22 @@
-
-variable            gamma equal 0.0001
 variable            cooltemp equal 0.45
 variable            seed equal 418940
+# Required command-line variables:
+#   -var gamma      0.005/0.015/0.030/0.060
+#   -var dt_shear   0.003 for 0.005, 0.001 for others
+#   -var dump_every output interval in MD steps
 
 units 		        lj
 dimension 	        3
 boundary 	        p p p
 atom_style 	        atomic
 
+# Keep the original fcc construction, but use 16^3 cells:
+# N = 4 * 16^3 = 16384, close to Zeng 3D MD N=16500.
 lattice 	        fcc 1.2
-region 	            box block 0 13 0 13 0 13
+region 	            box block 0 16 0 16 0 16
 create_box 	        2 box
 create_atoms 	    1 box
-group               smaller_atoms id 1:19652:5
+group               smaller_atoms id 1:16384:5
 set 		        group smaller_atoms type 2
 
 change_box 	        all triclinic
@@ -39,7 +43,8 @@ fix 		        motion all nve
 fix 		        start_heat all langevin 5.0 5.0 $(100.0*dt) ${seed} zero yes
 
 thermo 	            1000
-thermo_style 	    custom step temp epair etotal press vol pxy
+thermo_style 	    custom step atoms temp epair etotal press vol density pxy
+thermo_modify       flush yes
 
 run 		        50000
 
@@ -68,21 +73,41 @@ fix                 eq all nvt temp ${cooltemp} ${cooltemp} $(100.0*dt)
 run                 1000000
 unfix               eq
 
+timestep            ${dt_shear}
+
+variable            npre equal round(20.0/(v_gamma*v_dt_shear))
+variable            nprod equal round(50.0/(v_gamma*v_dt_shear))
 velocity            all ramp vx 0 $(v_gamma*ly) y 0 $(ly) sum yes units box
-fix 		        1 all deform 1 xy erate ${gamma} remap v
+fix 		        1 all deform 1 xy erate ${gamma} remap v flip yes
 fix 		        2 all nvt/sllod temp ${cooltemp} ${cooltemp} $(100.0*dt)
 
 # compute 	        layers all chunk/atom bin/1d y center 0.05 units reduced
 # fix 		        layers_vx all ave/chunk 20 250 5000 layers vx file profile_vx.txt
 
-variable 	        visc equal -pxy/v_gamma
+compute             Tdef all temp/deform
+compute             Pdef all pressure Tdef
+thermo_modify       temp Tdef
+thermo_modify       press Pdef
+
+variable 	        visc equal -c_Pdef[4]/v_gamma
 fix 		        visc_ave all ave/time 10 100 1000 v_visc ave running
 
-thermo_style	    custom step c_2_temp temp epair etotal press vol pxy f_visc_ave
+thermo_style	    custom step c_Tdef temp epair etotal c_Pdef vol c_Pdef[4] f_visc_ave
 thermo		        1000
+thermo_modify       flush yes
 
-run		            2000000
+run		            ${npre}
+reset_timestep      0
 
-# dump 		        1 all custom 1000 dump_shear_00011_interval_1000_to_2000000.colloid id type x y z
-# run               2000000
-write_restart       restart_shear.equil
+variable            t_now equal time
+variable            strain equal v_gamma*time
+variable            pxy equal c_Pdef[4]
+
+fix                 thermo_out all ave/time 100 1 100 v_t_now v_strain c_Tdef c_Pdef v_pxy file thermo.shear_${gamma}.dat
+
+dump 		        1 all custom ${dump_every} dump.shear_${gamma}.lammpstrj id type x y z ix iy iz xu yu zu vx vy vz
+dump_modify         1 sort id flush yes
+
+run		            ${nprod}
+
+write_restart       restart_shear.${gamma}.final
