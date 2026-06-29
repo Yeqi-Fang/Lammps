@@ -84,26 +84,23 @@ fix 		        2 all nvt/sllod temp ${cooltemp} ${cooltemp} $(100.0*dt)
 # compute 	        layers all chunk/atom bin/1d y center 0.05 units reduced
 # fix 		        layers_vx all ave/chunk 20 250 5000 layers vx file profile_vx.txt
 
-compute             Tdef all temp/deform
-compute             Pdef all pressure Tdef
-thermo_modify       temp Tdef
-thermo_modify       press Pdef
-
-variable 	        visc equal -c_Pdef[4]/v_gamma
-fix 		        visc_ave all ave/time 10 100 1000 v_visc ave running
-
-thermo_style	    custom step c_Tdef temp epair etotal c_Pdef vol c_Pdef[4] f_visc_ave
+thermo_style	    custom step c_2_temp temp epair etotal press vol pxy
 thermo		        1000
 thermo_modify       flush yes
 
 run		            ${npre}
 reset_timestep      0
 
+variable 	        visc equal -pxy/v_gamma
+fix 		        visc_ave all ave/time 10 100 1000 v_visc ave running
+
+thermo_style	    custom step c_2_temp temp epair etotal press vol pxy f_visc_ave
+
 variable            t_now equal time
 variable            strain equal v_gamma*time
-variable            pxy equal c_Pdef[4]
+variable            pxy_out equal pxy
 
-fix                 thermo_out all ave/time 100 1 100 v_t_now v_strain c_Tdef c_Pdef v_pxy file thermo.shear_${gamma}.dat
+fix                 thermo_out all ave/time 100 1 100 v_t_now v_strain c_2_temp press v_pxy_out file thermo.shear_${gamma}.dat
 
 dump 		        1 all custom ${dump_every} dump.shear_${gamma}.lammpstrj id type x y z ix iy iz xu yu zu vx vy vz
 dump_modify         1 sort id flush yes
