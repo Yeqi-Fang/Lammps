@@ -1,0 +1,844 @@
+RESEARCH ARTICLE | AUGUST 29 2025
+
+Connecting shear thinning and dynamic heterogeneity in
+supercooled liquids by localized elasticity
+Ke-Qi Zeng      ; Dong-Xu Yu        ; Zhe Wang 
+
+
+
+J. Chem. Phys. 163, 084512 (2025)
+https://doi.org/10.1063/5.0282802
+
+
+
+
+                                                                                      
+                                                                                      View     Export
+                                                                                      Online   Citation
+
+
+  Articles You May Be Interested In
+
+   Dynamical heterogeneity in a highly supercooled liquid under a sheared situation
+   J. Chem. Phys. (February 2012)
+
+   Flow of supercooled liquids under dipolar force field
+   J. Chem. Phys. (July 2025)
+
+   Dynamical heterogeneity in supercooled water and its spectroscopic fingerprints
+   J. Chem. Phys. (October 2025)
+
+
+
+
+                                                                                                          27 June 2026 08:02:57
+  The Journal
+                                                                                                    ARTICLE            pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+
+     Connecting shear thinning and dynamic
+     heterogeneity in supercooled liquids
+     by localized elasticity
+     Cite as: J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802
+     Submitted: 28 May 2025 • Accepted: 6 August 2025 •
+     Published Online: 29 August 2025
+
+     Ke-Qi Zeng,            Dong-Xu Yu,              and Zhe Wanga)
+
+     AFFILIATIONS
+     Department of Engineering Physics and Key Laboratory of Particle and Radiation Imaging (Tsinghua University)
+     of Ministry of Education, Tsinghua University, Beijing 100084, China
+
+     a)
+          Author to whom correspondence should be addressed: zwang2017@mail.tsinghua.edu.cn
+
+
+     ABSTRACT
+     Supercooled liquids exhibit complicated dynamical behaviors: At the microscopic level, the dynamics is heterogeneous spatially, known as
+     dynamic heterogeneity. At the macroscopic level, the shear viscosity decreases as the shear rate increases with a power law, known as shear
+
+
+
+
+                                                                                                                                                              27 June 2026 08:02:57
+     thinning. The relation between these two universal dynamical phenomena remains elusive. With simulations of several model liquids in two
+     and three dimensions, we show that they are quantitatively bridged by localized elasticity embodied as transient clusters that elastically respond
+     to shear. Prominent dynamic heterogeneity emerges right after the massive yielding of these clusters, which is initiated by shear transformation
+     zones and facilitated by elasticity-mediated interaction. With this picture, a scaling law relating shear thinning to the characteristic length of
+     dynamic heterogeneity is found.
+     Published under an exclusive license by AIP Publishing. https://doi.org/10.1063/5.0282802
+
+
+
+
+     I. INTRODUCTION                                                            and dynamic regions remains elusive, which impedes constitutive
+                                                                                modeling through DH.
+           Supercooled liquids exhibit remarkable shear thinning when                 Owing to the extremely viscous nature, deeply supercooled liq-
+     subjected to strong steady shear flow: At high enough shear rates          uids can be viewed as “solids that flow,”19,20 in the sense that they
+     γ̇, the shear viscosity η decreases with γ̇ as η ∼ γ̇ −λ .1,2 The micro-   behave elastically below certain length scales at short time scales.
+     scopic mechanism of this nonlinearity has attracted great scien-           This conceptual picture has been substantiated significantly in recent
+     tific interest in the past half century.3–16 Many approaches seek          years.21 For example, elastic features are observed in the stress cor-
+     structural indicators by characterizing the structural distortion at       relation in supercooled liquids.22–25 Further studies suggest that the
+     the pair level.4–12 These efforts connect shear thinning to cage           elasticity-mediated interaction plays a key role in facilitating new
+     configuration5–9 or the distortion of the pair distribution function       rearrangements, which finally leads to the emergence of DH.26–28
+     g(r) at the spatial range beyond the cage.11,12 The second class of        Moreover, it is also suggested that the extended-ranged elasticity
+     approaches tackles this problem by considering dynamic hetero-             is crucial in determining the nonlinear rheology of supercooled
+     geneity (DH),13–16 i.e., dynamic regions where particles collectively      liquids.29–32 These results open the possibility of connecting shear
+     undergo nontrivial displacements to rearrange the structure.17,18          thinning and DH by elasticity.
+     These studies have established a firm correspondence between shear               Inspired by some pioneering works,19,29 we recently proposed
+     thinning and the evolution of DH.13 Such success is expected if            a concept of localized elastic region (LER) to model the shear thin-
+     one considers the importance of DH in the research on the slow             ning of supercooled liquids.33 An LER is a transient zone containing
+     dynamics of supercooled liquids. Nevertheless, the relation between        hundreds of particles. It deforms elastically before yielding, which
+     the aforementioned two classes of approaches is unclear. More seri-        provides the resistance to the imposed shear.32,34,35 In this arti-
+     ously, the micro-mechanical connection between shear thinning              cle, we visualize this concept by characterizing the organization
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                     163, 084512-1
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                            ARTICLE                pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+     of cage jumps, i.e., large nonaffine displacements of particles.36,37
+     We find that the evolution of the localized elasticity resembles the
+     response of amorphous solids to the start-up shear:2,38,39 It sequen-
+     tially undergoes elastic deformation and plastic deformation and
+     eventually relaxes due to the avalanche of cage jumps facilitated by
+     the elasticity-mediated interaction. This relaxation process gives rise
+     to dynamic regions that compose the major signature of DH. Based
+     on these observations, a scaling law connecting the shear thinning
+     and the length scale of DH is given.
+
+     II. NUMERICAL SIMULATIONS
+           To study the dynamics and rheology of supercooled liquids,
+     we employ both Brownian dynamics (BD) simulation and molec-
+     ular dynamics (MD) simulation, which represent colloidal systems
+     and atomic systems, respectively. All studied systems are binary
+     mixtures. The BD system is the same as the one we employed
+     in our previous study.33 Its potential parameters well describe the             FIG. 1. Shear thinning, dynamic heterogeneity, and convective cluster. (a) Shear
+     inter-particle interaction of a three-dimensional (3D) charged col-             viscosity contributed by the Yukawa interaction for ϕ = 42.5% and 45% BD sam-
+     loidal suspension.40 Two volume fractions of particles, ϕ = 45% and             ples. Solid lines denote fits with γ̇ −λ in the shear-thinning regime. (b) Projection
+     42.5%, are adopted. The MD system is the celebrated Kob–Andersen                of cage-jump events in the shear plane accumulated within a time interval t χ for
+     liquid41 at a temperature close to its mode-coupling-theory temper-             the ϕ = 45% sample at γ̇τ0 = 3. The red solid line denotes the boundary of a
+                                                                                     cage-jump cluster (i.e., dynamic region). Moreover, two spherical regions, whose
+     ature. In addition to the above two 3D systems, we also simulate a              boundaries are denoted by the dashed green line and blue line, respectively, are
+     two-dimensional (2D) MD system, which has been used to study the                marked. The former is outside of any cage-jump cluster. The latter contains the
+     shear thinning of 2D supercooled liquids,15 to test the relevant scal-          parts of different cage-jump clusters. (c) Convective transport (time-evolution) and
+     ing law. The detailed information of the simulation systems, as well            traceback (time-reversal) of the boundary highlighted by the red solid curve in (b).
+     as the units of time τ 0 , length d0 , stress σ 0 , and viscosity η0 used in
+
+
+
+
+                                                                                                                                                                              27 June 2026 08:02:57
+     the following discussion, is given in Appendix A. For all conditions,
+     the SLLOD equation combined with the Lees–Edwards boundary
+     condition42 is applied for the shear with the stream velocity along                  To study the formation of a dynamic region composed of cage
+     the x direction and the velocity gradient along the y direction. In            jumps, we affinely trace back the deformation history of its bound-
+     Sec. III, we will first establish the connection between DH and shear          ary in flow, as illustrated in Fig. 1(c). From a time-forward view, the
+     thinning based on BD results. MD results will be appended next,                boundary undergoes a convective transport in flow. We identify the
+     which demonstrate that the conclusions found from 3D BD results                particles located inside the time-dependent boundary every Δt dur-
+     also hold well in the atomic system and 2D.                                    ing the traceback, where Δt is a small time interval of the order of
+                                                                                    0.01t χ . Then, we calculate the shear stress σ c of the cluster encom-
+                                                                                    passed by the boundary by summing the atomic shear stresses of the
+     III. RESULTS AND DISCUSSION                                                    inside particles. To be specific, for particle i inside the cluster, its
+     A. DH and convective cluster in flow                                           atomic shear stress at time t is given by45
+         Figure 1(a) shows the shear thinning of the viscosity η for two
+                                                                                                                  1    dV(r)        rij,x (t)rij,y (t)
+     BD samples calculated by                                                                      σi,xy (t) =      ∑        ∣r (t)                    ,               (2)
+                                                                                                                 Ωαi j  dr ij            ∣rij (t)∣
+                                 η = −⟨∑ ri,x f i,y ⟩/V γ̇,                  (1)
+                                          i
+                                                                                    where rij (t) is the displacement between the reference particle i
+     where ri and f i denote the position of particle i and the deterministic       and another particle j, rij,x/y denotes the x/y component of rij , Ωαi
+     force exerted on particle i, respectively, and V is the system vol-            represents the volume occupied by particle i, and the subscript αi
+     ume. At γ̇τ0 ≥ 1, a power-law thinning η ∼ γ̇ −λ is present. To explore        denotes the type of particle i (αi ∈ {b, s}, representing big or small).
+     the DH in flow, we look for the irreversible nonaffine displacements           Ωαi can be obtained by calculating the volume of the Voronoi cell
+     of particles by identifying cage jumps following Candelier et al.36,37         surrounding particle i. Here, for simplicity, we estimate Ωαi by
+     Figure 1(b) shows a projection of cage-jump events accumulated
+     within a time interval t χ for the ϕ = 45% BD sample at γ̇τ0 = 3,                                   Ωb   db D
+                                                                                                            =( ) ;            Nb Ωb + Ns Ωs = V,                       (3)
+     where t χ is the time at which the dynamic susceptibility χ 4 (t) reaches                           Ωs   ds
+     maximum.43,44 The clustering of cage jumps is clearly seen, imply-
+     ing the significance of DH in flow. The boundary of such a dynamic             where D is the dimension of the system and db/s and N b/s are the
+     region is delineated according to the density distribution of cage             diameter and number of the big or small particle, respectively. Such
+     jumps, and an example is given in Fig. 1(b) (denoted by the red                an estimation does not affect the main results and conclusions.45
+     solid line). The details for identifying cage jumps and demarcating            Knowing σ i,xy (t), the shear stress σ c of the convective cluster is
+     the boundaries of dynamic regions are given in Appendix B.                     found by
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                     163, 084512-2
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                      ARTICLE              pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+                               σc (t) = ∑ σi∈F,xy (t)Ωαi /VF ,                             (4)   where
+                                           i
+                                                                                                                                       Δt               Δt
+     where F denotes the reference convective cluster and V F refers to                                        Xxk (t) = ∑ [ri,x (t +     ) − r0,x (t + )]
+                                                                                                                          i∈F          2                2
+     the volume of cluster F. Figure 2(a) gives the evolution of σ c of a
+                                                                                                                                      Δt               Δt
+     convective cluster, which finally gives rise to the dynamic region                                                   × [ri,k (t − ) − r0,k (t − )],                  (6)
+     marked in Fig. 1(b). It is seen that as time t evolves, σ c increases                                                            2                2
+     from nearly zero. We denote the starting point of the increase in σ c
+     as t 0 . At t > t 0 , σ c first undergoes a nearly linear growth until t 1 , then                                                 Δt               Δt
+     a milder growth until t 2 , and finally a sharp drop until t 3 . Besides the                              Yyk (t) = ∑ [ri,y (t −     ) − r0,y (t − )]
+                                                                                                                          i∈F          2                2
+     shear stress, we also calculate the shear strain γc for the same cluster
+                                                                                                                                      Δt               Δt
+     and show the result in Fig. 2(a). γc is determined by minimizing the                                                 × [ri,k (t − ) − r0,k (t − )],                  (7)
+     mean-square local nonaffine displacement as suggested by Falk and                                                                2                2
+     Langer46 and is calculated by
+                                                                                                 where r0 denotes the position of the centroid of cluster F. As seen
+                                                                                                 from Fig. 2(a), γc grows with t in a nearly linear way at first and again
+                      γc (t) = ∑ Xxk (t)Yyk
+                                         −1
+                                            (t) − δxy , k = x, y, z,                       (5)   drops at t = t 2 . The behaviors of σ c (t) and γc (t) suggest that the
+                                  k
+                                                                                                 cluster sequentially undergoes elastic deformation during [t 0 , t 1 ],
+                                                                                                 plastic deformation during [t 1 , t 2 ], and yielding at t = t 2 , similar to
+                                                                                                 the response of amorphous solids.2,38,39,47 As we will see, the yielding
+                                                                                                 process of the convective cluster is accompanied by extensive cage
+                                                                                                 jumps within the cluster, which corresponds to the dynamic region
+                                                                                                 marked in Fig. 1(b). This kind of solid-like response is also found for
+                                                                                                 other clusters studied in this work.
+                                                                                                       To learn more about this local response, we calculate three
+                                                                                                 other quantities for the same cluster. Figure 2(b) shows the tempo-
+                                                                                                 ral density of cage jumps ncj (t), which records the count of cage
+                                                                                                 jumps in the cluster during [t − Δt/2, t + Δt/2]. ncj (t) exhibits a
+
+
+
+
+                                                                                                                                                                                  27 June 2026 08:02:57
+                                                                                                 smooth bump at t 1 and a peak at t 2 , suggesting that the change of
+                                                                                                 mechanical response is accompanied by the surge of cage jumps.
+                                                                                                 Previous studies33,38 show that irreversible displacements of particles
+                                                                                                 in sheared glassy systems are mostly along the extensional direction
+                                                                                                 of shear geometry. Thus, we check the direction of the displacement
+                                                                                                 vector r̃cj of every cage jump and calculate the percentage Pext (t)
+                                                                                                 that the projection of r̃cj in the shear plane aligns with the first or
+                                                                                                 the third quadrant. As seen in Fig. 2(c), Pext (t) is statistically larger
+                                                                                                 than 50% during [t 0 , t 3 ] and reaches a local maximum at t 1 and t 2 ,
+                                                                                                 which is consistent with the previous results.33,38 Note that although
+                                                                                                 the evolution of the boundary is deterministic, the particles inside
+                                                                                                 and outside the boundary can exchange. In Fig. 2(d), we character-
+                                                                                                 ize this exchange with R(t) = 1 − N res (t)/N res (t 0 ), where N res (t) is
+                                                                                                 the number of particles inside the boundary at t 0 that are still inside
+                                                                                                 at t. The weak exchange at t < t 2 suggests that the convective cluster
+                                                                                                 can be viewed as an entity that evolves in a nearly closed manner.
+                                                                                                 This manner is terminated by abundant rearrangements manifested
+                                                                                                 by the sharp increase in R(t) from t 2 .
+                                                                                                       Figures 2(e)–2(h) display the spatiotemporal accumulation of
+                                                                                                 cage jumps in the cluster studied in Figs. 2(a)–2(d). At t < t 1 , cage
+                                                                                                 jumps are sparse [Fig. 2(e)]. At t ≈ t 1 , a few cage jumps have con-
+      FIG. 2. Results of convective cluster analysis. Evolutions of (a) σ c and γc , (b) ncj ,   centrated on some spots with a diameter of ∼3d0 , as marked in
+      (c) Pext , and (d) R of the convective cluster found from the dynamic region marked        Fig. 2(f). These spots could be the manifestation of shear transfor-
+      in Fig. 1(b) are shown. Characteristic moments are noted by vertical dashed lines.
+                                                                                                 mation zones (STZs),46,48–50 as we will address later. During [t 1 , t 2 ]
+      (e)–(h) display the spatiotemporal accumulations of cage jumps (red dots) inside
+      the aforementioned cluster in the shear plane at t ′ , t 1 , t 2 and t 3 , respectively.   [Fig. 2(g)], lots of cage jumps appear throughout the cluster, stem-
+      Coordinates of cage-jump events plotted in (e)–(h) have been transformed to the            ming from the spots marked in Fig. 2(f). At t ≈ t 3 , the whole cluster
+      moment of maximum χ 4 (t) by affine displacements of the convective shear, in              has been occupied by cage jumps. The outward propagation of cage
+      order to compare different moments. (i) Evolutions of shear stress σc′ and strain          jumps from early-formed cage-jump spots shown here is consistent
+      γ′c of the region marked by the dashed green circle in Fig. 1(b). (j) Evolutions of        with the dynamic facilitation (DF) mechanism.36,51–53 Summarizing
+      shear stress σc′′ and strain γ′′c of the region marked by the dashed blue circle in        the results shown in Figs. 2(a)–2(h), we suggest that the emergence
+      Fig. 1(b).
+                                                                                                 of the dynamic region marked in Fig. 1(b) is a reflection of the
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                         163, 084512-3
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                           ARTICLE                 pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+     yielding and rearrangement of the localized elasticity embodied as
+     a convective cluster.
+           The accumulation of stress and strain in localized regions in
+     steady shear flow and its relation to the appearance of dynamic
+     regions are highly nontrivial. To further clarify the importance of
+     these observations, we perform the following contrast calculation.
+     As shown in Fig. 1(b), we circle two spherical regions, whose bound-
+     aries are denoted by a dashed green line and a blue line, respectively.
+     The former is outside of any dynamic region. The latter contains
+     the parts from different dynamic regions. We trace the evolutions
+     of these two regions according to the method illustrated in Fig. 1.
+     Figures 2(i) and 2(j) give the evolutions of shear stress and strain
+     for these two regions, respectively. For both cases, no stress or strain
+     accumulation is found. Their stresses and strains evolve steadily with
+     fluctuations, similar to the stereotyped image of viscous liquids. The
+     sharp difference between Figs. 2(i), 2(j), and 2(a) highlights the non-
+     triviality of the localized elastic coherency and its connection to the
+     clustering of jump events in flow.                                            FIG. 3. Convective cluster and shear thinning. (a) Percentage Pc (t) of particles
+           Since many clusters coexist in the flow, one may be interested          inside convective clusters for the ϕ = 45% sample at γ̇τ0 = 3. The horizontal line
+     in whether there is a coupling between the behaviors of different             gives its average value P̄c . (b) Comparison between the cluster-sustained viscosity
+     clusters. Particularly, the rapid disintegration of a cluster results in      ηc and η calculated by Eq. (1). Lines denote fits with γ̇ −λ . (c) Comparison between
+     non-negligible energy release and particle exchange in a short time           the cluster radius ξ c and the LER radius ξ LER . Lines denote fits with ξc ∼ γ̇ −νc and
+                                                                                   ξLER ∼ γ̇−ν . It is seen that νc ≈ ν′ . (d) Comparison between the yielding time t y
+                                                                                                ′
+     interval, as suggested by Fig. 2(d). Thus, it is possible that neighbor-
+     ing clusters are dynamically correlated. Nevertheless, considering            and t χ . Lines denote the power-law fits.
+     that one cluster contains hundreds of particles, the statistics related
+     to inter-cluster quantities are poor, impeding the accurate quantifi-
+     cation of the inter-cluster correlation. To preliminarily explore this
+
+
+
+
+                                                                                                                                                                              27 June 2026 08:02:57
+                                                                                  Fig. 3(b), we compare ηc with η calculated by Eq. (1) in the shear-
+     problem, we trace all particles inside a given cluster after its yield-      thinning regime. A nice match is seen, supporting that the elasticity
+     ing and record the time at which each particle enters a new elastic          of convective clusters is indeed dominating in contributing to shear
+     cluster. Taking the case of ϕ = 45% and γ̇τ0 = 3 as an example, we           thinning.
+     find that 78% particles enter new elastic clusters within a time inter-            In Fig. 3(c), we show the characteristic radius of convective
+     val of only 0.25t χ after the yielding of the given cluster. This result     clusters ξ c as a function of γ̇ in the shear-thinning regime for two
+     indicates that the yielding of a cluster may facilitate the formation of
+     new clusters.                                                                BD samples. ξ c is found by ξc = (3Vc /4π)1/3 , where V c is the aver-
+                                                                                  age cluster volume. It is seen that ξ c shrinks with γ̇ by a power-law
+                                                                                  ξc ∼ γ̇ −νc . This is another important phenomenon for understand-
+     B. Convective cluster and shear thinning
+                                                                                  ing the relation between localized elasticity and shear thinning.
+            Subsection III A elucidates how the yielding of convective clus-      Inspired by the “solids-that-flow” picture of supercooled liquids,19–21
+     ters leads to the emergence of DH manifested by the clustering of            we give the following picture for local structural rearrangement in
+     cage jumps. Next, we will explore the relation between shear thin-           the shear-thinning regime:33 Before the rearrangement takes place,
+     ning and convective clusters. We calculate the real-time percentage          most particle motion is vibrational, and jump events are relatively
+     Pc (t) of particles that are included in convective clusters across the      rare. Such a solid-like behavior cannot be global for liquids. It only
+     whole system. Figure 3(a) shows Pc (t) for the ϕ = 45% BD sample             happens within a certain length, denoted as lsol . In our case, lsol is
+     at γ̇τ0 = 3. It is seen that Pc (t) mildly fluctuates around its average     just the length scale of convective cluster ξ c . Set l0 as the characteris-
+     P̄c , which is 78% in this case. In fact, P̄c is found to be about 80% for   tic length of a jump event. Within the solid-like region, the number
+     all simulated flows in the shear-thinning regime. These results sug-         of possible locations for jump events is about Nj ∼ (ξc /l0 )D . Con-
+     gest that most particles are participating in the deformation-yielding       sidering that the local configuration will thoroughly rearrange after
+     process of convective clusters at a given time. Thus, we expect that         the yielding of a convective cluster, we can estimate the relaxation
+     the viscosity of the system is mainly contributed by the resistance          time of the local structure τ LS by the life cycle of the convective
+     formed by the elastic energy barrier of convective clusters. To test         cluster τLS ∼ γc,y /γ̇, where γc,y is the average yielding strain of the
+     this idea, we estimate the shear viscosity of the system by the elastic      cluster. Then, the average time between two time-adjacent jumps is
+     stress sustained by convective clusters as                                   given by τ LS /N j . During the time interval τ LS /N j , the cluster keeps its
+                                                                                  solidity, which means that transverse phonons are able to traverse
+                                         1 σc,y                                   the whole cluster within this time interval. From this considera-
+                                     ηc = P̄c   ,                          (8)
+                                         γ̇   2                                   tion, it is found that τ LS /N j should be equal to lsol /c, where c is
+                                                                                  the transverse sound speed. Therefore, we have ξcD+1 ≈ cl0 D γc,y /γ̇
+     where σ c,y is the average yielding stress of the cluster so that σ c,y /2   ∝ γc,y /γ̇. To connect ξ c and shear thinning, we take note of the rela-
+     is the average stress sustained by the cluster during its life cycle. In     tion γc,y ∼ γ̇ 1−λ , which can be derived from ηc ∼ σc,y /γ̇ ∼ γ̇ −λ and
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                     163, 084512-4
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                          ARTICLE                pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+               λ
+     TABLE I. D+1 and νc for different model systems.
+
+                                                    λ
+     Model system                                  D+1
+                                                                           νc
+     3D BD, ϕ = 45%                               0.166                   0.174
+     3D BD, ϕ = 42.5%                             0.158                   0.163
+     3D MD                                        0.182                   0.176
+     2D MD                                        0.253                   0.247
+
+
+
+     σ c,y ∝ γc,y . Consequently, we have ξcD+1 ∼ γ̇ −λ . Recalling the obser-
+     vation of ξc ∼ γ̇ −νc , we finally find the following scaling law:33
+                                              λ
+                                      νc =        .                        (9)
+                                            D+1
+     We compare the values of νc obtained by fitting the data shown
+                                       λ
+     in Fig. 3(c) and the values of D+1    in Table I. It is seen that the
+     relative difference between these two exponents is only about 5%.
+                                                                                    FIG. 4. Yielding mechanism of the convective cluster. (a) Projection of PHM in
+     The nice validity of Eq. (9) and the observation that ξ c shrinks              the shear plane for the convective cluster studied in Figs. 2(a)–2(h). Cage jumps
+     with γ̇ further elucidate the essential role of localized elasticity in        happening during [t 0 , t 1 ] are also shown (red dots). Here, only the projections
+     shear thinning. Apparently, shear thinning is related to the fact that         with significant magnitude are retained for clarity. The inset is the enlarged view
+     γc,y does not increase linearly with γ̇ but with a weaker relation             of the spot marked by the rectangle and shows all PHM projections around the
+                                                                                    marked cage-jump spot. The excellent coincidence between PHM-predicted STZs
+     γc,y ∼ γ̇ 1−λ . According to the aforementioned picture, the weaker            and cage-jump spots is seen. (b) and (c) show the orientation-averaged gcj (r) and
+     relation γc,y ∼ γ̇ 1−λ must be accompanied with the shrinkage of ξ c .         the anisotropic factor α(r) of the ϕ = 45% BD sample at different γ̇, respectively.
+     Note that if ξ c does not shrink with γ̇, the jump events inside               (d) Comparison between the radius of α(r)ξ α and the cluster radius ξ c for the
+     a convective cluster will be too frequent. In this case, transverse            ϕ = 45% BD sample. Lines denote the power-law fits.
+
+
+
+
+                                                                                                                                                                           27 June 2026 08:02:57
+     phonons will not have enough time to traverse the whole cluster,
+     and consequently, the elasticity cannot be sustained within the whole
+     cluster.                                                                      the responses of convective clusters and amorphous solids to shear,
+           In passing, for complex fluids with attractive wells in inter-          one may expect that the yielding of convective clusters is initiated
+     particle interaction, such as proteins and some colloids, temporary           by STZs. STZs are known to relate to the undeformed configura-
+     aggregations may form. The size of such aggregation also shrinks as           tion.56 To search for STZs, we first isolate the cluster studied in
+     γ̇ increases but with a power law different from Eq. (9).54,55                Figs. 2(a)–2(h) by fixing the particles outside the cluster and then
+           According to the relation between convective clusters and               calculate the pseudoharmonic modes (PHM)57 with reference to the
+     dynamic regions, ξ c is also the characteristic length of dynamic             inherent structure of the cluster at t 0 . The PHM, defined based on
+     regions. Therefore, Eq. (9) bridges shear thinning and DH through             the harmonic approximation of a glass’s energy, is proven to be
+     localized elasticity. To further confirm this picture, we compare t χ         an effective indicator for STZ.57 In Fig. 4(a), we show the modes
+     with the average yielding time t y = ⟨t 2 − t 0 ⟩ of convective clusters in   that indicate potential STZs in the cluster. The aggregation of these
+     the shear-thinning regime. As shown in Fig. 3(d), t χ nicely agrees           eigenvectors is featured by the geometry consistent with the shear:
+     with t y . This result is consistent with our viewpoint that the emer-        extensional in the first and the third quadrants and compressional
+     gence of prominent DH is intimately correlated with the massive               in the other two. The cage jumps happening during [t 0 , t 1 ] are also
+     yielding of elastic clusters.                                                 plotted, as we do in Fig. 2(f). It is seen that the cage-jump spots
+           In our previous work,33 we propose the concept of LER within            marked in Fig. 2(f) coincide with the loci of STZs predicted by
+     which the response to shear is elastic. Conceptually, the convective          PHM analysis. The existence of STZs inside convective clusters sug-
+     cluster is the spatiotemporal representation of LER. In that work, we         gests that the dynamics of sheared supercooled liquids manifests an
+     evaluate the characteristic radius of LER ξ LER by analyzing the dis-         interesting spatial hierarchy: liquidlike background, solidlike medium
+     tortion of g(r).33 The results of ξ LER are also plotted in Fig. 3(c). It     (LER), liquidlike spots (STZ), from large length scales to small length
+     is seen that ξ LER and ξ c behave highly consistently, with ξ c ≈ 0.8ξ LER    scales.
+     for all conditions. The agreement between ξ LER and ξ c is noticeable,              Local plastic events trigger anisotropic stress correlation in the
+     especially considering that ξ LER is found from the two-point corre-          surrounding elastic medium.58 This mechanism, which has been
+     lation,33 which is commonly considered to be not sensitive to DH              incorporated into elastoplastic models for the rheology of amor-
+     features.43                                                                   phous solids,28 was introduced to study the DH in equilibrium
+                                                                                   supercooled liquids by means of DF recently.26,27 The development
+     C. Yielding mechanism of convective cluster                                   of cage jumps shown in Figs. 2(e)–2(h) exhibits DF-like feature. To
+          The above discussion highlights the necessity of understanding           clarify the relation between the localized elasticity and the likely DF,
+     the microscopic mechanism of the yielding of convective clusters in           for a specific convective cluster, we calculate the pair correlation of
+     understanding shear thinning. Considering the similarity between              cage jumps as26
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                  163, 084512-5
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                      ARTICLE                  pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+                             Ncj′                                                            represent colloidal suspensions. One may be interested in whether
+                 gcj (r) =        ⟨∑ δ(r − [rs,k (t1 : t2 ) − rc,j (t1 )])⟩,          (10)
+                             N j,k                                                           our conclusion also holds for atomic systems. Additionally, the scal-
+                                                                                             ing law given by Eq. (9) calls for validation with other dimensions.
+     where rc,j (t 1 ) denotes the position of the jth cage jump appearing                   For these purposes, we perform MD simulations in 3D and 2D, as
+     within [t 1 − Δt/2, t 1 + Δt/2] inside the cluster, rs,k (t 1 : t 2 ) denotes           introduced in Appendix A. For both MD samples, shear thinning
+     the position of the kth cage jumps appearing within [t 1 , t 2 ] in the                 is remarkable and can be described with a power law η ∼ γ̇ −λ at
+     whole system, N is the number of particles, and Ncj′ is the count                       high enough shear rates, as shown in Figs. 5(a) and 5(c). At the
+     of cage jumps appearing within [t 0 , t 1 ] in the whole system. g cj (r)               microscopic level, the DH phenomenon, which is manifested by the
+     evaluates the facilitation effect during [t 1 , t 2 ], within which abun-               spatiotemporal clustering of cage jumps, is clearly seen in both MD
+     dant cage jumps emerge. Figure 4(b) gives the orientation-averaged                      samples, as shown in Figs. 5(b) and 5(d). These observations are
+     g cj (r) for the ϕ = 45% BD sample. It is seen that g cj (r) is not sen-                similar to those of the BD systems.
+     sitive to γ̇. Considering the anisotropy of the strain field of plastic                      To examine the relation between shear thinning and DH for
+     events, it is the anisotropy of g cj (r), rather than the orientation-                  MD samples, we identify the convective clusters and perform the
+     averaged radial feature, that better measures the elastic component                     cluster analysis for two MD samples. Figure 6 shows typical results
+     of g cj (r).26 Thus, we calculate the anisotropic factor of g cj (r) by                 of the cluster analysis for both MD samples. Here, the left col-
+                                                                                             umn and the right column display the results of the 3D sample and
+     α(r) = ⟨[gcj (r)/gcj (r) − 1]2 ⟩Ω , where ⟨⋅ ⋅ ⋅⟩Ω represents the average               the 2D sample, respectively. The two clusters studied in Fig. 6 are
+     over solid angle. As seen in Fig. 4(c), the amplitude of α(r) does not                  found from the dynamic regions marked in Figs. 5(b) and 5(d).
+     depend on γ̇, whereas its spatial range clearly shrinks with γ̇. We                     In calculating σ c (t), we employ the iso-configurational ensemble
+     identify the truncation radius of α(r), denoted as ξ α , by the point at                (ICE) method59 to enhance the statistics with 50 ICE replicants
+     which α(r) undergoes a sudden change to a much steeper profile,                         for each cluster. It is seen that the results of the MD samples
+     as marked by arrows in Fig. 4(c). Figure 4(d) displays the result of
+     ξ α . ξ c is also plotted for comparison. ξ α and ξ c are seen to be highly
+     consistent with each other, manifested by ξ α ≈ 0.8ξ c . This agreement
+     confirms the localized nature of the transient elasticity and reveals
+     the importance of elasticity-mediated interaction in facilitating the
+     avalanche of cage jumps and the yielding of convective clusters.
+
+
+
+
+                                                                                                                                                                                            27 June 2026 08:02:57
+     D. Atomic system and 2D system
+          In Subsections III A–III C, we establish the relation between
+     shear thinning and DH based on the 3D BD systems, which
+
+
+
+
+      FIG. 5. Shear thinning and dynamic heterogeneity of MD systems. (a) Shear vis-
+      cosity of the 3D MD system. (b) Projection of cage-jump events in the shear plane       FIG. 6. Convective cluster analysis for MD systems. The left column shows evo-
+      accumulated within a time interval t χ for the 3D MD system at γ̇τ0 = 0.015. (c)        lutions of (a) σ c and γc , (b) ncj , (c) Pext , and (d) R of the convective cluster found
+      Shear viscosity of the 2D MD system. (d) Cage-jump events accumulated within            from the dynamic region marked in Fig. 5(b). The right column shows evolutions
+      a time interval t χ for the 2D MD system at γ̇τ0 = 0.001. Solid lines in (a) and (c)    of (e) σ c and γc , (f) ncj , (g) Pext , and (h) R of the convective cluster found from the
+      denote fits with γ̇ −λ in the shear-thinning regime. Red solid curves in (b) and (d)    dynamic region marked in Fig. 5(d). Characteristic moments are noted by vertical
+      denote the boundaries of selected cage-jump clusters.                                   dashed lines.
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                                   163, 084512-6
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                ARTICLE            pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+                                                                                            We demonstrate the intermediate role of localized elasticity in this
+                                                                                            connection: It is the major source of viscosity that shear-thins, and
+                                                                                            its yielding gives rise to dynamic regions that constitute the promi-
+                                                                                            nent manifestation of DH. The yielding of the localized elasticity
+                                                                                            is initiated by STZs and facilitated by the anisotropic elasticity-
+                                                                                            mediated interaction. With these observations, we quantitatively
+                                                                                            link DH and shear thinning by a simple scaling relation νc = D+1   λ
+                                                                                                                                                                 .
+                                                                                            These results pave the way for the modeling of the nonlinear rheol-
+                                                                                            ogy of supercooled liquids by elucidating the behaviors of localized
+                                                                                            elasticity.
+
+
+                                                                                            ACKNOWLEDGMENTS
+                                                                                                 This research was supported by the National Natural Science
+                                                                                            Foundation of China (Grant No. 11975136). The Center of High
+                                                                                            Performance Computing, Tsinghua University, is acknowledged for
+                                                                                            computational resources.
+      FIG. 7. Convective cluster and shear thinning in MD systems. (a) and (c) compare
+      the cluster-sustained viscosity ηc and η calculated by Eq. (1) for the 3D system
+      and the 2D system, respectively. (b) and (d) compare the cluster radius ξ c and the   AUTHOR DECLARATIONS
+      radius of α(r)ξ α for the 3D system and the 2D system, respectively. Lines denote
+      power-law fits in all panels.                                                         Conflict of Interest
+                                                                                                 The authors have no conflicts to disclose.
+
+     are qualitatively consistent with those of the BD sample shown in                      Author Contributions
+
+
+
+
+                                                                                                                                                                          27 June 2026 08:02:57
+     Figs. 2(a)–2(d), suggesting that the convective clusters in MD sys-                    Ke-Qi Zeng: Data curation (lead); Investigation (lead); Methodol-
+     tems also undergo the three-step process: elastic deformation, plastic                 ogy (lead); Writing – original draft (equal); Writing – review & edit-
+     yielding, and sharp disintegration. Moreover, we check the spa-                        ing (equal). Dong-Xu Yu: Investigation (supporting); Methodology
+     tiotemporal accumulations of cage jumps for these two clusters, as                     (supporting); Writing – original draft (supporting). Zhe Wang:
+     we do in Figs. 2(e)–2(h). Meanwhile, we also perform the PHM cal-                      Conceptualization (lead); Funding acquisition (lead); Investiga-
+     culations on them. The results confirm the emergence of cage-jump                      tion (supporting); Methodology (supporting); Supervision (lead);
+     spots, which can be the manifestation of STZs, at the end of the elas-                 Writing – original draft (equal); Writing – review & editing (equal).
+     tic deformation stage in MD systems. The small overshoots of σ c at
+     t 1 and t 2 shown in Figs. 6(a) and 6(e) could be attributed to the over-
+     distortion of the corresponding cage along the extensional direction                   DATA AVAILABILITY
+     when a particle is about to jump.                                                          The data that support the findings of this study are available
+           We calculate the viscosity sustained by the cluster, ηc , and                    from the corresponding author upon reasonable request.
+     the radius of the cluster, ξ c , in the shear-thinning regime for two
+     MD samples. As seen from Figs. 7(a) and 7(c), ηc nicely matches                        APPENDIX A: SIMULATION SYSTEMS
+     η calculated by Eq. (1), confirming the importance of the localized
+     elasticity in resisting external flow. The results of ξ c are shown in                       The details of the three simulation systems are as follows. (i)
+     Figs. 7(b) and 7(d). Again, ξ c shrinks with γ̇ following a power-law                  The BD system is the same as the one we employed in our previ-
+     form ξc ∼ γ̇ −νc . Note that the scaling relation given in Eq. (9) criti-              ous study:33 a 3D binary mixture of N s = 4000 small particles and
+     cally depends on dimension. As seen in Table I, both the 2D sample                     N b = 16 000 big particles (diameter ratio ds /db = 2/3) interacting via
+     and the 3D sample follow the scaling relation well, thereby con-                       the hard-sphere Yukawa potential. The hard core is represented by
+     vincingly demonstrating its validity. We also plot the results of the                  the potential-free algorithm,60,61 and the Yukawa part is expressed as
+     truncation radius of α(r) (ξ α ) in Figs. 7(b) and 7(d). For both MD                   V(r) = K exp [−z(r − dij )]/(r/dij ) for r ≥ dij ≡ (di + dj )/2, where
+     samples, ξ α is approximately equal to ξ c , implying the crucial role of              di is the diameter of particle i and the parameters z = 4.86/db and
+     the elasticity-mediated interaction in our picture.                                    K = 9.69kB T (kB is the Boltzmann constant) are determined from
+           With Figs. 5–7, we show that the major conclusions still hold in                 small-angle neutron scattering results of a charged colloidal sus-
+     MD systems and 2D.                                                                     pension.40 V(r) is truncated at r = 5db . The units of length and
+                                                                                            time are, respectively, set by d0 = db and τ0 = db2 /D0 , where D0 is
+                                                                                            the self-diffusion coefficient of the big particle at the dilute limit.
+     IV. CONCLUSION                                                                         Two volume fractions of particles, ϕ = 45% and 42.5%, are adopted.
+          In this work, we explore the connection between two uni-                          The long-time self-diffusion coefficient at ϕ = 42.5% is found to
+     versal dynamic phenomena in supercooled liquids, namely, shear                         be 0.06D0 , which is well below the dynamical criterion for freez-
+     thinning at the macroscopic level and DH at the microscopic level.                     ing of colloidal suspensions,62 suggesting that the BD samples are
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                 163, 084512-7
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                ARTICLE               pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+     in a supercooled state. (ii) For the 3D MD system, we adopt the                     lc2 (lc is the cage size), one separates the total trajectory into caging
+     Kob–Andersen liquid:41 a 3D binary mixture of N s = 3300 small par-                 motions connected by jumps. lc2 is determined as the value of the
+     ticles and N b = 13 200 big particles interacting via the Lennard-Jones             particle mean square displacement at the crossover from the plateau
+                                           12          6
+     (LJ) potential V(r) = 4εαβ [(σαβ /r) − (σαβ /r) ], with α, β ∈ {b, s}.              behavior to the long-time diffusive behavior. In calculating the mean
+     Big particles and small particles having the same mass m. LJ para-                  square displacement for 2D samples, the displacement of a particle
+     meters are given by εbb = 1, σ bb = 1, εbs = 1.5, σ bs = 0.8, εss = 0.5,            should be corrected with reference to the coordinates of its cage as64
+     and σ ss = 0.88. V(r) is truncated at r = 2.5σ bb . The√units of length
+                                                                                                                                    1 Nnn (i)
+     and time are, respectively, set by d0 = σ bb and τ0 = mσbb     2
+                                                                      /εbb . The                δrCR
+                                                                                                  i (t) = [r i (t) − r i (0)]−            ∑ [r j (t) − r j (0)], (B2)
+     particle number density is set to ρ = 1.2. The temperature is set to                                                         Nnn (i) j=1
+     kB T/εbb = 0.45, slightly higher than the mode-coupling-theory tem-
+     perature kB T MCT /εbb = 0.435. (iii) In addition to the above two 3D                                                     1 N                2
+     systems, we also simulate a 2D MD system to test the scaling law.                                        ⟨δr2 (t)⟩CR =      Σi=1 ⟨[δriCR (t)] ⟩,                  (B3)
+                                                                                                                               N
+     The 2D system is the same as the one used in a previous simula-
+     tion study of shear thinning:15 a binary mixture of N s = 104 small                 where ri is the position of particle i and N nn (i) is the number of
+     disks and N b = 104 big particles interacting via a soft-core poten-                neighbors of particle i. Here, we select particles within the distance at
+     tial V(r) = ε(σαβ /r)12 , where σ αβ = (σ α + σ β )/2, with α, β ∈ {b, s}.          which the pair distribution function g(r) reaches the first minimum
+     V(r) is truncated at r = 4.5σ s . The mass and size ratios are set to               as neighbors. lc 2 is found to be 0.05 for the BD conditions, 0.057
+     mb /ms = 2 and σ b /σ s = 1.4, respectively.
+                                          √        The units of length and               for the 3D MD conditions, and 0.048 for the 2D MD conditions.
+     time are set by d0 = σ s and τ0 = ms σs2 /ε, respectively. The par-                 Figure 8 illustrates the separation of the particle trajectory by cage
+     ticle number density is set to ρ = 0.8. The temperature is set to                   jumps at the BD condition of ϕ = 45% and γ̇ = 0.
+     kB T/ε = 0.526. Here, both the 3D MD and 2D MD systems are                               The spatiotemporal distribution of cage jumps shows remark-
+     simulated with the Large-scale Atomic/Molecular Massively Parallel                  able heterogeneity. We choose t χ , the time at which the dynamic
+     Simulator (LAMMPS) package.63                                                       susceptibility χ 4 (t)43 reaches maximum, as the characteristic time
+           As for the units of stress σ 0 and viscosity η0 , we adopt                    to observe clustering of cage jumps. χ 4 (t) is defined as
+     σ0 = kB T/d03 and η0 = kB Tτ0 /d03 in BD simulations, σ0 = εbb /d03 and
+                                                                                                                         βV
+
+
+
+
+                                                                                                                                                                                27 June 2026 08:02:57
+     η0 = εbb τ0 /d03 in 3D MD simulations, and σ0 = ε/d02 and η0 = ετ0 /d02                                  χ4 (t) =      [⟨Q(t)2 ⟩ − ⟨Q(t)⟩2 ],                     (B4)
+     in 2D MD simulations.                                                                                               N2
+           In the main text, we use Δt as the time interval for calculations
+                                                                                         where β = 1/kB T, Q(t) = ∑Ni=1 ∑Nj=1 w(∣ri (t) − r j (0)∣), and w(r) is
+     of many quantities. Its value is set as follows: For BD simulations,
+                                                                                         an “overlap” function, which is unity for r ≤ a and zero otherwise.
+     Δt = 0.005τ 0 for γ̇ = 1τ0−1 and 3τ0−1 , Δt = 0.002τ 0 for γ̇ = 10τ0−1 , and
+                                                                                         The value of parameter a is set to 0.2 for the BD system, 0.25 for the
+     Δt = 0.001τ 0 for γ̇ = 20τ0−1 . For 3D MD simulations, Δt = 0.2τ 0
+                                                                                         3D MD system, and 0.3 for the 2D MD system. It is important to note
+     for γ̇ = 0.003τ0−1 , Δt = 0.15τ 0 for γ̇ = 0.005τ0−1 , Δt = 0.1τ 0 for
+                                                                                         that the overlap function under steady shear needs to be adjusted to
+     γ̇ = 0.015τ0−1 and 0.03τ0−1 , and Δt = 0.05τ 0 for γ̇ = 0.06τ0−1 .                                            t
+     For 2D MD simulations, Δt = 2τ 0 for γ̇ = 10−4 τ0−1 , Δt = τ 0 for                  w(∣ri (t) − r j (0) − γ̇∫0 dt ′ y j (t ′ )ex ∣).
+     γ̇ = 5 × 10−4 τ0−1 , Δt = 0.5τ 0 for γ̇ = 10−3 τ0−1 , Δt = 0.1τ 0 for                     Considering the remarkable spatial heterogeneity of cage
+     γ̇ = 5 × 10−3 τ0−1 , and Δt = 0.05τ 0 for γ̇ = 10−2 τ0−1 .                          jumps, we propose the following cluster demarcation procedure
+                                                                                         based on their spatial density distribution. The procedure consists
+                                                                                         of two steps: the coarse sieve and the undersize sieve. Figure 9 inter-
+     APPENDIX B: IDENTIFICATION OF CAGE JUMPS                                            prets the procedure at the BD condition of ϕ = 45% and γ̇τ0 = 3.
+     AND DEMARCATION OF DYNAMIC REGIONS                                                  In the following paragraphs, we will introduce the two steps of the
+           We identify the irreversible nonaffine displacements of parti-                procedure in detail.
+     cles, noted as cage jumps, following the algorithm given by Candelier
+     et al.36,37 Considering the existence of external flow, we adopted
+     the nonaffine particle displacement r̃(t) defined by Yamamoto and
+     Onuki13 as the particle trajectory. First, we split the trajectory of a
+     particle S(t)t∈ [0,T] into two sets of successive points, respectively,
+     denoted as S1 and S2 , at an arbitrary cut time t c . One can evaluate
+     how well separated are these two sets of points by
+
+                                                                        1/2
+                    p(tc ) = ζ(tc )[⟨d12 (t2 )⟩t2 ∈S2 ⟨d22 (t1 )⟩t1 ∈S1 ]     ,   (B1)
+
+                      √
+     where ζ(tc ) = tc /T × (1 − tc /T) and dk (t i ) is the distance between
+     the point at time t i and the center of mass of the subset Sk . The aver-
+     age ⟨. . .⟩Sk is over the subset Sk . A cage jump event is defined at t c
+                                                                                          FIG. 8. Trajectory of a reference particle. The color of the trajectory changes at
+     if p(t c ) is maximal. Then, by iteratively repeating this procedure
+                                                                                          every cage jump. Four segments are shown here.
+     for every sub-trajectory until pmax (t c ) is smaller than a threshold
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                       163, 084512-8
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                               ARTICLE                 pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+
+
+      FIG. 9. Illustration of the coarse sieve and undersize sieve. (a) Spatial distribution of cage jumps during a time interval t χ inside a slice of thickness 1.5d 0 at the BD condition of
+      ϕ = 45% and γ̇τ0 = 3. (b) Spatial density field of cage jumps coarse-grained from (a). Colors of blocks from red to black indicate an increase in density. Blocks surrounded by
+      white square frames are those of a local density maximum. (c) Clusters obtained after the coarse sieve procedure. The black sphere indicates the size of V stz . (d) Undersize
+      sieve of the cluster highlighted in (b) by a white circle. Colors of spheres from yellow to blue indicate a decrease in density of cage jumps.
+
+
+
+     1. Coarse sieve                                                                                 very sensitive to C′ in a certain range of C′ . Taking the BD condition
+            As for the coarse sieve process, ρ(r), the spatial density field                         of ϕ = 45% and γ̇τ0 = 3 as an example, the values of ξ c are found to be
+     of cage jumps, is coarse-grained with the coarse-graining length d.                             6.461, 6.627, and 6.902 for C′ = 2, 3, and 4, respectively. In addition,
+     For BD conditions, we directly divide the box into blocks of length d                           the exponent νc is found to be not sensitive to C′ either. To make the
+     and count the number of cage jumps within each block. d is selected                             best use of simulation data, we choose C′ = 2 for all conditions.
+     as L/10 for γ̇τ0 = 1, 3, 10 and L/20 for γ̇τ0 = 20, where L refers to
+     the box length. For MD conditions, the original spatial distribu-                               2. Undersize sieve
+     tion of cage jumps is convolved by the coarse-graining function ϕ(r)                                  This procedure is to refine the coarse-grained boundary found
+     ∝ e−r/d to obtain the coarse-grained field ρ(r). Here, we set d as the                          above. For a cluster identified by a coarse sieve, we divide it into
+
+
+
+
+                                                                                                                                                                                                  27 June 2026 08:02:57
+     value at which the pair distribution function g(r) displays the first                           small boxes of length d′ . d′ is chosen as L/30 for 3D systems and L/80
+     minimum. With the coarse-grained field ρ(r), we find the local den-                             for the 2D system. d′ is close to the corresponding length unit d0 . For
+     sity maximum ρ(rmax ), where rmax could be the potential center of                              each
+                                                                                                     √ ′grid point (vertex of small box), we draw a sphere with radius of
+     one cage-jump cluster.                                                                            2d /2 and calculate the density of cage jumps within each sphere.
+            To demarcate the cage-jump cluster, it is necessary to find a                            Then, a refined cluster boundary can be identified by comparing the
+     reasonable threshold value of ρ(r) representing the background,                                 local density of cage jumps at each grid point with ρth .
+     denoted as ρth . Then, regions with ρ(r) ≥ ρth are possible to be
+     included in cage-jump clusters. To find ρth , we perform a simple
+     iteration: For a given initial time t ini , ρMAX , the global maximum of
+                                                                                                     REFERENCES
+     ρ(r), is selected as the initial iteration value ρ0 . Then, we calculate
+     ρavg = Avg(ρ < ρ0 ) and assign the value of ρavg to ρ1 , which is the ini-                      1
+                                                                                                       R. G. Larson, The Structure and Rheology of Complex Fluids (Oxford University
+                                                                                                     Press, New York, 1999).
+     tial value for the next iteration step. We repeat this procedure until                          2
+                                                                                                       P. Oswald, Rheophysics: The Deformation and Flow of Matter (Cambridge
+     ∣ρavg − ρi ∣/ρavg < C, where C is an empirical parameter. The mean
+                                                                                                     University Press, Cambridge, 2014).
+     value of all final ρavg found with different t ini is employed as ρth for                       3
+                                                                                                       W.-T. Ashurst and W. G. Hoover, “Dense-fluid shear viscosity via nonequilib-
+     this working condition. For the value of C, we use 10% for both BD                              rium molecular dynamics,” Phys. Rev. A 11, 658 (1975).
+                                                                                                     4
+     and MD conditions. In fact, we have tested different values of C in a                             J. F. Schwarzl and S. Hess, “Shear-flow-induced distortion of the structure of a
+     range of 5%–10% for BD simulations, 10%–20% for 3D MD simula-                                   fluid: Application of a simple kinetic equation,” Phys. Rev. A 33, 4277 (1986).
+                                                                                                     5
+     tions, and 10%–15% for 2D MD simulations. The numerical results                                   M. Fuchs and M. E. Cates, “Theory of nonlinear rheology and yielding of dense
+                                                                                                     colloidal suspensions,” Phys. Rev. Lett. 89, 248304 (2002).
+     of ξ c and ηc only change slightly. Moreover, their relevant exponents                          6
+                                                                                                       J. M. Brader, M. E. Cates, and M. Fuchs, “First-principles constitutive equation
+     with respect to γ̇ remain almost the same.                                                      for suspension rheology,” Phys. Rev. Lett. 101, 138301 (2008).
+            Now, we can determine the coarse-grained boundary of each                                7
+                                                                                                       K. Miyazaki, D. Reichman, and R. Yamamoto, “Supercooled liquids under shear:
+     cage-jump cluster. For a given ρ(r), we start from the position of a                            Theory and simulation,” Phys. Rev. E 70, 011501 (2004).
+     rmax and then explore outward until the value of ρ(r) is lower than                             8
+                                                                                                       A. Furukawa, “Onset of shear thinning in glassy liquids: Shear-induced small
+     ρth . With this procedure, we find the coarse-grained boundary of a                             reduction of effective density,” Phys. Rev. E 95, 012613 (2017).
+     cage-jump cluster, within which we have ρ(r) ≥ ρth .                                            9
+                                                                                                       A. Furukawa, “Quantification of the volume-fraction reduction of sheared frag-
+            Typically, the yielding of a convective cluster involves several                         ile glass-forming liquids and its impact on rheology,” Phys. Rev. Res. 5, 023181
+                                                                                                     (2023).
+     STZs. Thus, the size of a cluster cannot be too small. We set a lower                           10
+                                                                                                        H. Mizuno, A. Ikeda, T. Kawasaki, and K. Miyazaki, “Universal mechanism of
+     limit for the volume of the cluster by V c,ll = C′ V stz , where V stz is the                   shear thinning in supercooled liquids,” Commun. Phys. 7, 199 (2024).
+     characteristic volume of an STZ and C′ is a numerical factor. V stz is                          11
+                                                                                                        T. S. Ingebrigtsen and H. Tanaka, “Structural predictor for nonlinear sheared
+     determined by the size of the cage-jump spot [Fig. 2(f) gives several                           dynamics in simple glass-forming liquids,” Proc. Natl. Acad. Sci. U. S. A. 115,
+     cases of the cage-jump spot]. We find that the cluster radius ξ c is not                        87–92 (2018).
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                                         163, 084512-9
+Published under an exclusive license by AIP Publishing
+  The Journal
+                                                                                                                     ARTICLE               pubs.aip.org/aip/jcp
+  of Chemical Physics
+
+
+     12                                                                                       40
+        T. Yamaguchi, “Stress-structure coupling and nonlinear rheology of Lennard-              Z. Wang, T. Iwashita, L. Porcar, Y. Wang, Y. Liu, L. E. Sánchez-Díaz, B. Wu, G.-
+     Jones liquid,” J. Chem. Phys. 148, 234507 (2018).                                        R. Huang, T. Egami, and W.-R. Chen, “Local elasticity in nonlinear rheology of
+     13                                                                                       interacting colloidal glasses revealed by neutron scattering and rheometry,” Phys.
+        R. Yamamoto and A. Onuki, “Dynamics of highly supercooled liquids:
+     Heterogeneity, rheology, and diffusion,” Phys. Rev. E 58, 3515 (1998).                   Chem. Chem. Phys. 21, 38–45 (2019).
+     14                                                                                       41
+        H. Mizuno and R. Yamamoto, “Dynamical heterogeneity in a highly super-                   W. Kob and H. C. Andersen, “Testing mode-coupling theory for a supercooled
+     cooled liquid under a sheared situation,” J. Chem. Phys. 136, 084505 (2012).             binary Lennard-Jones mixture I: The van Hove correlation function,” Phys. Rev.
+     15
+        A. Furukawa, K. Kim, S. Saito, and H. Tanaka, “Anisotropic cooperative struc-         E 51, 4626 (1995).
+                                                                                              42
+     tural rearrangements in sheared supercooled liquids,” Phys. Rev. Lett. 102, 016001          A. W. Lees and S. F. Edwards, “The computer study of transport pro-
+     (2009).                                                                                  cesses under extreme conditions,” J. Phys. C: Solid State Phys. 5, 1921
+     16                                                                                       (1972).
+        V. Lubchenko, “Shear thinning in deeply supercooled melts,” Proc. Natl. Acad.
+                                                                                              43
+     Sci. U. S. A. 106, 11506–11510 (2009).                                                      N. Lačević, F. W. Starr, T. Schrøder, and S. C. Glotzer, “Spatially heteroge-
+     17                                                                                       neous dynamics investigated via a time-dependent four-point density correlation
+        M. D. Ediger, “Spatially heterogeneous dynamics in supercooled liquids,” Annu.
+     Rev. Phys. Chem. 51, 99–128 (2000).                                                      function,” J. Chem. Phys. 119, 7372–7387 (2003).
+     18                                                                                       44
+        C. P. Royall and S. R. Williams, “The role of local structure in dynamical arrest,”      L. Wang, N. Xu, W. Wang, and P. Guan, “Revealing the link between structural
+     Phys. Rep. 560, 1–75 (2015).                                                             relaxation and dynamic heterogeneity in glass-forming liquids,” Phys. Rev. Lett.
+     19
+        J. C. Dyre, “Colloquium: The glass transition and elastic models of glass-forming     120, 125502 (2018).
+                                                                                              45
+     liquids,” Rev. Mod. Phys. 78, 953 (2006).                                                   T. Egami, “Atomic level stresses,” Prog. Mater. Sci. 56, 637–653 (2011).
+     20                                                                                       46
+        J. C. Dyre, “Solidity of viscous liquids,” Phys. Rev. E 59, 2458 (1999).                 M. L. Falk and J. S. Langer, “Dynamics of viscoplastic deformation in
+     21
+        J. C. Dyre, “Solid-that-flows picture of glass-forming liquids,” J. Phys. Chem.       amorphous solids,” Phys. Rev. E 57, 7192 (1998).
+                                                                                              47
+     Lett. 15, 1603–1617 (2024).                                                                 W. H. Wang, “The elastic properties, elastic models and elastic perspectives of
+     22
+        A. Lemaître, “Structural relaxation is a scale-free process,” Phys. Rev. Lett. 113,   metallic glasses,” Prog. Mater. Sci. 57, 487–656 (2012).
+                                                                                              48
+     245702 (2014).                                                                              A. S. Argon, “Plastic deformation in metallic glasses,” Acta Metall. 27, 47–58
+     23
+        B. Illing, S. Fritschi, D. Hajnal, C. Klix, P. Keim, and M. Fuchs, “Strain pattern    (1979).
+                                                                                              49
+     in supercooled liquids,” Phys. Rev. Lett. 117, 208002 (2016).                               P. Schall, D. A. Weitz, and F. Spaepen, “Structural rearrangements that govern
+     24
+        V. A. Levashov, J. R. Morris, and T. Egami, “Viscosity, shear waves, and atomic-      flow in colloidal glasses,” Science 318, 1895–1899 (2007).
+                                                                                              50
+     level stress-stress correlations,” Phys. Rev. Lett. 106, 115703 (2011).                     Y. Fan, T. Iwashita, and T. Egami, “How thermally activated deformation starts
+     25
+        H. Tong, S. Sengupta, and H. Tanaka, “Emergent solidity of amorphous mate-            in metallic glass,” Nat. Commun. 5, 5083 (2014).
+                                                                                              51
+     rials as a consequence of mechanical self-organisation,” Nat. Commun. 11, 4863              D. Chandler and J. P. Garrahan, “Dynamics on the way to forming glass: Bubbles
+     (2020).                                                                                  in space-time,” Annu. Rev. Phys. Chem. 61, 191–217 (2010).
+     26                                                                                       52
+        R. N. Chacko, F. P. Landes, G. Biroli, O. Dauchot, A. J. Liu, and D. R. Reich-           A. S. Keys, L. O. Hedges, J. P. Garrahan, S. C. Glotzer, and D. Chandler,
+
+
+
+
+                                                                                                                                                                                     27 June 2026 08:02:57
+     man, “Elastoplasticity mediates dynamical heterogeneity below the mode coupling          “Excitations are localized and relaxation is hierarchical in glass-forming liquids,”
+     temperature,” Phys. Rev. Lett. 127, 048002 (2021).                                       Phys. Rev. X 1, 021013 (2011).
+     27                                                                                       53
+        M. Ozawa and G. Biroli, “Elasticity, facilitation, and dynamic heterogeneity in          C. Scalliet, B. Guiselin, and L. Berthier, “Thirty milliseconds in the life of a
+     glass-forming liquids,” Phys. Rev. Lett. 130, 138201 (2023).                             supercooled liquid,” Phys. Rev. X 12, 041028 (2022).
+     28                                                                                       54
+        A. Nicolas, E. E. Ferrero, K. Martens, and J.-L. Barrat, “Deformation and flow           A. Zaccone, M. Soos, M. Lattuada, H. Wu, M. U. Bäbler, and M. Morbidelli,
+     of amorphous solids: Insights from elastoplastic models,” Rev. Mod. Phys. 90,            “Breakup of dense colloidal aggregates under hydrodynamic stresses,” Phys. Rev.
+     045006 (2018).                                                                           E 79, 061401 (2009).
+     29                                                                                       55
+        T. Iwashita and T. Egami, “Atomic mechanism of flow in simple liquids under              B. Ó. Conchúir and A. Zaccone, “Mechanism of flow-induced biomolecular and
+     shear,” Phys. Rev. Lett. 108, 196001 (2012).                                             colloidal aggregate breakup,” Phys. Rev. E 87, 032310 (2013).
+     30                                                                                       56
+        J. Chattoraj and A. Lemaître, “Elastic signature of flow events in supercooled           D. Richard, M. Ozawa, S. Patinet, E. Stanifer, B. Shang, S. A. Ridout,
+     liquids under shear,” Phys. Rev. Lett. 111, 066001 (2013).                               B. Xu, G. Zhang, P. K. Morse, J.-L. Barrat et al., “Predicting plasticity in
+     31                                                                                       disordered solids from structural indicators,” Phys. Rev. Mater. 4, 113609
+        A. Ghosh and K. S. Schweizer, “The role of collective elasticity on activated
+     structural relaxation, yielding, and steady state flow in hard sphere fluids and         (2020).
+                                                                                              57
+     colloidal suspensions under strong deformation,” J. Chem. Phys. 153, 194502                 D. Richard, G. Kapteijns, J. A. Giannini, M. L. Manning, and E. Lerner, “Simple
+     (2020).                                                                                  and broadly applicable definition of shear transformation zones,” Phys. Rev. Lett.
+     32                                                                                       126, 015501 (2021).
+        P. Sollich, F. Lequeux, P. Hébraud, and M. E. Cates, “Rheology of soft glassy
+                                                                                              58
+     materials,” Phys. Rev. Lett. 78, 2020 (1997).                                               G. Picard, A. Ajdari, F. Lequeux, and L. Bocquet, “Elastic consequences of a
+     33                                                                                       single plastic event: A step towards the microscopic modeling of the flow of yield
+        D. Kong, W.-R. Chen, K.-Q. Zeng, L. Porcar, and Z. Wang, “Localized elasticity
+     governs the nonlinear rheology of colloidal supercooled liquids,” Phys. Rev. X 12,       stress fluids,” Eur. Phys. J. E 15, 371–381 (2004).
+                                                                                              59
+     041006 (2022).                                                                              A. Widmer-Cooper, P. Harrowell, and H. Fynewever, “How reproducible are
+     34
+        D. J. Lacks, “Energy landscapes and the non-Newtonian viscosity of liquids and        dynamic heterogeneities in a supercooled liquid?,” Phys. Rev. Lett. 93, 135701
+     glasses,” Phys. Rev. Lett. 87, 225502 (2001).                                            (2004).
+     35                                                                                       60
+        S. Patinet, D. Vandembroucq, and M. L. Falk, “Connecting local yield stresses            D. R. Foss and J. F. Brady, “Brownian dynamics simulation of hard-sphere
+     with plastic activity in amorphous solids,” Phys. Rev. Lett. 117, 045501 (2016).         colloidal dispersions,” J. Rheol. 44, 629–651 (2000).
+     36                                                                                       61
+        R. Candelier, O. Dauchot, and G. Biroli, “Building blocks of dynamical                   D. M. Heyes and J. R. Melrose, “Brownian dynamics simulations of model hard-
+     heterogeneities in dense granular media,” Phys. Rev. Lett. 102, 088001 (2009).           sphere suspensions,” J. Non-Newtonian Fluid Mech. 46, 1–28 (1993).
+     37                                                                                       62
+        R. Candelier, A. Widmer-Cooper, J. K. Kummerfeld, O. Dauchot, G. Biroli, P.              H. Löwen, T. Palberg, and R. Simon, “Dynamical criterion for freezing of
+     Harrowell, and D. R. Reichman, “Spatiotemporal hierarchy of relaxation events,           colloidal liquids,” Phys. Rev. Lett. 70, 1557 (1993).
+                                                                                              63
+     dynamical heterogeneities, and structural reorganization in a supercooled liquid,”          A. P. Thompson, H. M. Aktulga, R. Berger, D. S. Bolintineanu, W. M. Brown,
+     Phys. Rev. Lett. 105, 135702 (2010).                                                     P. S. Crozier, P. J. In’t Veld, A. Kohlmeyer, S. G. Moore, T. D. Nguyen et al.,
+     38
+        N. Koumakis, M. Laurati, S. U. Egelhaaf, J. F. Brady, and G. Petekidis, “Yielding     “LAMMPS–A flexible simulation tool for particle-based materials modeling at
+     of hard-sphere glasses during start-up shear,” Phys. Rev. Lett. 108, 098303 (2012).      the atomic, meso, and continuum scales,” Comput. Phys. Commun. 271, 108171
+     39                                                                                       (2022).
+        M. Laurati, P. Maßhoff, K. J. Mutch, S. U. Egelhaaf, and A. Zaccone, “Long-
+                                                                                              64
+     lived neighbors determine the rheological response of glasses,” Phys. Rev. Lett.            E. Flenner and G. Szamel, “Fundamental differences between glassy dynamics
+     118, 018002 (2017).                                                                      in two and three dimensions,” Nat. Commun. 6, 7392 (2015).
+
+
+
+
+J. Chem. Phys. 163, 084512 (2025); doi: 10.1063/5.0282802                                                                                                           163, 084512-10
+Published under an exclusive license by AIP Publishing
+

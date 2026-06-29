@@ -14,7 +14,7 @@ MSD: ⟨r̃²(t)⟩ = (1/N) Σ_i |r̃_i(t)|²
     python compute_msd_nonaffine.py \
         --dump dump.shear_0.015.lammpstrj \
         --rate 0.015 \
-        --dt_frame 33.333 \
+        --dt_frame 1.333 \
         --output figures
 """
 
@@ -230,7 +230,7 @@ if __name__ == '__main__':
         if len(frames) >= 2:
             dt_frame = (frames[1]['timestep'] - frames[0]['timestep']) * args.dt
         else:
-            dt_frame = 0.5 / args.rate  # 默认：dump_every * dt
+            dt_frame = 0.02 / args.rate  # default: in.shear_template dump interval
         print(f"  帧间时间: Δt_frame = {dt_frame:.3f} τ₀")
     else:
         dt_frame = args.dt_frame

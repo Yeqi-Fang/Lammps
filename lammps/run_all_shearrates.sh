@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===========================================================================
-# Bash Script: Run SLLOD Shear Simulations for All Shear Rates
+# Bash Script: Run SLLOD Shear Simulations for High Shear Rates
 # Reference: Zeng et al., J. Chem. Phys. 163, 084512 (2025)
 #
 # Usage:
@@ -26,9 +26,8 @@ RESTART_FILE="restart.equil"               # Equilibrated restart
 # Base random seed (each shear rate gets a unique seed)
 BASE_SEED=12345
 
-# All shear rates to simulate (in tau_0^{-1})
-# Sorted from low to high for logical ordering
-SHEAR_RATES="0.001 0.003 0.005 0.01 0.015 0.02 0.05 0.1"
+# High shear rates used for the server reproduction.
+SHEAR_RATES="0.005 0.015 0.030 0.060"
 
 # Output directories (create if not exist)
 DATA_DIR="../data"
@@ -75,7 +74,7 @@ for SR in ${SHEAR_RATES}; do
     fi
     PRE=$(python3  -c "print(round(20.0/(${SR}*${DT})))")
     PROD=$(python3 -c "print(round(50.0/(${SR}*${DT})))")
-    DUMP=$(python3 -c "print(round(0.5/(${SR}*${DT})))")
+    DUMP=$(python3 -c "print(round(0.02/(${SR}*${DT})))")
     printf "  %-12s %-8s %-14s %-14s %-14s\n" ${SR} ${DT} ${PRE} ${PROD} ${DUMP}
 done
 echo ""
@@ -107,7 +106,7 @@ for SR in ${SHEAR_RATES}; do
     echo "  Thermostat damp   = $(python3 -c "print(100.0*${DT})")"
     echo "  Pre-run steps     = $(python3 -c "print(round(20.0/(${SR}*${DT})))")"
     echo "  Prod  steps       = $(python3 -c "print(round(50.0/(${SR}*${DT})))")"
-    echo "  Dump  every       = $(python3 -c "print(round(0.5/(${SR}*${DT})))")"
+    echo "  Dump  every       = $(python3 -c "print(round(0.02/(${SR}*${DT})))")"
     echo "  Log file          = ${LOG_FILE}"
     echo "  Start time        = $(date '+%Y-%m-%d %H:%M:%S')"
 

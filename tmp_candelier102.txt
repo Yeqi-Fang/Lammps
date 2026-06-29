@@ -1,0 +1,241 @@
+                                                                                                                          week ending
+PRL 102, 088001 (2009)                      PHYSICAL REVIEW LETTERS                                                   27 FEBRUARY 2009
+
+
+
+                  Building Blocks of Dynamical Heterogeneities in Dense Granular Media
+                                             R. Candelier,1 O. Dauchot,1 and G. Biroli2
+                                    1
+                                      CEA SPEC, CNRS URA 2464, F-91191 Gif-sur-Yvette, France
+2
+    Institut de Physique Théorique, CEA, IPhT, F-91191 Gif-sur-Yvette, France, and CNRS, URA 2306, F-91191 Gif-sur-Yvette, France
+                                       (Received 2 November 2008; published 27 February 2009)
+                   We investigate experimentally the connection between short time dynamics and long time dynamical
+                heterogeneities within a dense granular media under cyclic shear. We show that dynamical heterogeneities
+                result from a two time scales process. Short time but already collective events consisting in clustered cage
+                jumps concentrate most of the nonaffine displacements. On larger time scales, such clusters appear
+                aggregated both temporally and spatially in avalanches which eventually build the large scales dynamical
+                heterogeneities. Our results indicate that facilitation plays an important role in the relaxation process
+                although it does not appear to be conserved as proposed in many models studied in the literature.
+
+                DOI: 10.1103/PhysRevLett.102.088001                              PACS numbers: 45.70.Mg, 45.70.Ht, 61.43.j
+
+   Mechanically driven grains exhibit a dramatic slowing                and spatially in avalanches and ultimately build the large
+down of their dynamics when their volume fraction is                    scales dynamical heterogeneities. We find that dynamic
+increased above a certain value. This phenomenon, generi-               facilitation [11,18] clearly plays a major role in the devel-
+cally called jamming transition, shares a lot of experimen-             opment of the avalanche process, although it seems to be
+tal features with the glass transition and, indeed, it has been         irrelevant in triggering it. A detailed discussion of our
+suggested that they are both governed by similar under-                 findings on the basis of the current theoretical literature
+lying physical mechanisms [1]. Whether such mechanisms                  is presented in the conclusion.
+originate from an ideal transition of any kind remains,                    The experimental setup, the same as in [6,7], consists in
+however, a matter of debate [2–4]. One of the major recent              a horizontal monolayer of about 8300 bi-disperse steel
+advances in these fields has been the discovery of dynamic              cylinders of diameter 5 and 6 mm in equal proportions
+heterogeneity (DH). Experimental and numerical works                    quasistatically sheared at constant volume fraction  ¼
+have shown that the dynamics become increasingly corre-                 0:84. The shear is periodic, with an amplitude max ¼
+lated in space approaching the glass and the jamming                    5 . A high resolution camera takes images each time
+transitions (see [5] for a recent review, and [6–10] more               the system is back to its initial position  ¼ 0 . Both the
+specifically for granular media). This clearly shows that the           camera resolution and a better control of the lightening
+slowing down of the dynamics is related to a collective                 uniformity now allow the tracking of N ¼ 4055 grains in
+phenomenon, possibly to a true phase transition. Different              the center of the device without any loss. A typical experi-
+theories have been developed in order to explain quantita-              ment lasts 10 000 cycles. We choose the time unit to be one
+tively this phenomenon. The crucial last missing piece                  back and forth cycle, and the length unit to be the diameter
+consists in understanding what is the underlying mecha-                 of small particles. Redoing the same analysis, as in pre-
+nism leading to dynamic heterogeneity and, hence, respon-               vious studies [6,7], we observe that: (i) the dynamics is
+sible for the slow relaxation. Many different possible                  isotropic, subdiffusive at short times, and diffusive at long
+origins have been highlighted in the literature: dynamic                times; subdiffusion stems from the trapping of the particles
+facilitation [11], soft modes [12,13], proximity to a mode              within cages of size c ¼ 0:1, a value slightly smaller than
+coupling transition [14,15], growing amorphous order                    in [6,7], presumably because of small changes in packing
+[16,17], etc. At this stage, it is therefore crucial to perform         fraction and/or shear amplitude; (ii) introducing
+detailed studies aimed at unveiling what are the building                                                                
+blocks of DH.                                                                                          k~rp ðt; t þ Þk2
+                                                                                   Qp;t ða; Þ ¼ exp                      ;       (1)
+   The aim of this Letter is to perform such a type of                                                        2a2
+analysis for a granular system close to its jamming tran-
+sition. Our starting point consists in identifying the ele-             where ~rp ðt; t þ Þ is the displacement of the particle p
+mentary irreversible relaxation processes that we shall call            between t and t þ  and a is a probing length scale. The
+cage jumps in reference to the well-known interpretation of             computation of the four points correlation function
+the slowing down of the dynamics in terms of caging [5].                4 ða; Þ ¼ NðhQt ða; Þ2 i  hQt ða; Þi2 Þ, where Qt ða; Þ ¼
+                                                                        1P
+Our analysis shows that DH is the result of two processes               N p Qp;t ða; Þ, reveals that the dynamical correlation
+taking place on different time scales. On short time scales,            length is maximal for  ¼ 720 and a ¼ 0:15.
+clustered cage jumps concentrate most of the nonaffine                     In the present study, we first segment the trajectories in
+displacements. On larger time scales such clusters, that                separated cages introducing a novel algorithm. Consider a
+are already collective events, aggregate both temporally                trajectory SðtÞt2½0;T on a total time T and split it at an
+
+0031-9007=09=102(8)=088001(4)                                   088001-1                   Ó 2009 The American Physical Society
+                                                                                                                                    week ending
+PRL 102, 088001 (2009)                            PHYSICAL REVIEW LETTERS                                                       27 FEBRUARY 2009
+
+
+
+
+FIG. 1 (color online). Left: 3D visualization of the trajectory                   FIG. 2. Left: Spatiotemporal position of the cage jumps: only
+of a single particle. The color changes every time the algorithm                  one direction in space is shown (x axis). Each point represents a
+detects a cage jump. Right: Comparison between the relative                       cage jump. The very flat clouds of points are clusters of collec-
+averaged relaxation Qt ða ;  Þ=hQt it (in gray/cyan areas) and the             tive and instantaneous cage jumps. Right: Probability distribu-
+relative percentage Pt ð Þ=hPt it of particles that have not jumped             tion of clusters sizes.
+between t and t þ  (in dark areas),  ¼ 720.
+
+                                                                                  two important features. The duration of these clusters
+arbitrary cut time tc into two sets of successive points: S1                      follows an exponential distribution with an average value
+for t1 2 ½0; tc  and S2 for t2 2tc ; T. Then we measure                        which remains small, typically of the order of 10 cycles.
+how well separated are the two sets of points:                                    On the contrary, cage jumps are not isolated in space: the
+                                                                                  cluster size distribution has very fat tails. In the regime of
+         pðtc Þ ¼ ðtc Þ½hd1 ðt2 Þ2 it2 2S2 hd2 ðt1 Þ2 it1 2S1 1=2 ;      (2)
+                                                                                  sizes experimentally available, it is well described by a
+where dk ðti Þ is the distance between the point at time ti and                   power law ðNc Þ ’ Nc , where Nc is the number of grains
+the center of mass of the subset Sk . The average hiSk is                         within a cluster and  2 ½3=2; 2 (see the right-hand side
+                                          pﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ   of Fig. 2). Experimentally the average cluster size equals
+computed over the subset Sk . ðtc Þ ¼ tc =T  ð1  tc =TÞ,
+the standard deviation of the number of steps in a given set                      18 and has a standard deviation of 34. We now compute the
+for a uniformly distributed process is the natural normal-                        square difference between the actual local deformation
+ization that eliminates the large fluctuations arising when                       around a grain i, and the one it would have if it were in a
+tc is too close to the bounds of ½0; T. We define a cage                         region of uniform strain ":
+jump at tc when pðtc Þ is maximal. The procedure is then                                                  X
+repeated iteratively for every subtrajectory until pmax ðtc Þ <                               D2i ðt; Þ ¼ ½~rij ðt þ Þ  ":~rij ðtÞ2 ;    (3)
+                                                                                                            j
+2c . The left-hand side of Fig. 1illustrates how, using the
+above algorithm, we successfully segment the trajectories                         where the index j runs over the neighboring grains of
+into cages separated by jumps. Cage jumps are defined                             reference grain i and r~ij ðtÞ ¼ r~j ðtÞ  r~i ðtÞ. 2i ðt; Þ ¼
+within a resolution of 10 cycles. A direct and important
+                                                                                  Min" ðD2i ðt; ÞÞ is the local deviation from affine deforma-
+observation is that the distribution of the time spent in each
+cage is exponential and characterized by an average ‘‘cage                        tion during the time interval  (see [19] for details). We
+time’’ c ¼ 1160. For comparison, Qt ða ;  ¼ 1000Þ ’ 0:5
+[7]. This means that in average a particle jumps only once
+on the time scale over which Qt ða ; Þ relaxes. The right-
+hand side of Fig. 1 displays the relative values of Qt ða ;  Þ
+together with Pt ð Þ the relative percentage of particles
+that have not jumped during  . The correlation is straight-
+forward: the bursts of cage jumps caught by the algorithm
+are responsible for the major relaxation events of the
+system. Anticipating on the following, one can also check
+that the cage jumps detected by the algorithm are also
+exactly located in the areas where the decorrelation is
+maximal (compare Fig. 4 middle and right panels).
+                                                                                  FIG. 3 (color online). Left: Clusters of cage jumps concentrate
+   The left-hand side of Fig. 2 reveals that cage jumps
+                                                                                  the highly nonaffine domains: the distance to affinity parameter
+occur intermittently both in space and time. There are                            ðt; Þ (in levels of gray) is compared to the location of clusters
+very long intervals without a jump in a whole region of                           of collective cage jumps (with red boundaries) ( ¼ 30). Right:
+space separated by sudden and collective relaxation events.                       Zoom on a highly nonaffine region (box on the left figure). The
+When clustering the cage jumps which are adjacent in                              displacements of the particles, magnified by a factor 2, are in
+space (neighboring particles) and time (separated by less                         light grey (yellow). For convenience, the main streams creating
+than the jump resolution, i.e., 10 cycles) one can extract                        intense local shears are eye guided.
+                                                                           088001-2
+                                                                                                                         week ending
+PRL 102, 088001 (2009)                    PHYSICAL REVIEW LETTERS                                                    27 FEBRUARY 2009
+
+observe (Fig. 3) that the clusters of cage jumps concentrate           to the delay between two successive events within a given
+the highly-nonaffine deformations and can be identified as             avalanche, whereas the long one l is the time separating
+the elementary irreversible events of the dynamics.                    two avalanches at a similar location. l nicely corresponds
+   We shall now unveil how the above short term events                 to the typical cage time of individual particles c ¼ 1160,
+build up large collective relaxation on long time scales.              indicating that almost no particle jumps twice within the
+The heavy tails in the distribution of the cluster sizes               same avalanche. Spatially, we compute the distance be-
+(right-hand side of Fig. 2) suggests that the collective               tween avalanches as the minimal distance between all the
+cage jumps aggregate into some kind of avalanche process:              couples of clusters separated by a lag time less than 2s and
+a first cluster triggers the apparition of successive bursts           belonging to different avalanches. The minimal distance
+nearby shortly after, which in turn trigger other nearby               between avalanches points toward an average distance of
+bursts. Such avalanches would provide a natural mecha-                 27 and a standard deviation of 14, indicating a clear spatial
+nism for the formation of the long term dynamical hetero-              separation between avalanches. Also, the fractal dimension
+geneities, as we shall see now. The left-hand side of Fig. 4           of clusters dF gives a geometrical characterization of the
+compares the cumulative distribution (cPdf) of the lag                 structure of the dynamically correlated regions. Within the
+times between adjacent clusters (red circles) to that of               statistical accuracy, dF increases from 1.3 towards 2 during
+independent events following a Poissonian process with                 the aggregation process. Thus, as in numerical studies on
+the same average lag time (dark line). Both cumulative                 glass-forming liquids [20,21], we find that dynamically
+distributions intersect at a lag time corresponding precisely          correlated regions become thicker on larger time scales.
+to the time scale of the dynamical heterogeneities  :                Finally, selecting a time interval of length  , initiated at
+compared to the Poissonian process, there is an excess of              the beginning of a given avalanche, Fig. 4 compares the
+short lag times when  <  , i.e., Probðlag < Þ ¼                    spatial organization of the clusters in the avalanche and the
+cPdfðÞ is larger than for the Poissonian process, and an              local relaxation of the system as measured by the field
+excess of large lag times when  >  , i.e., Probðlag >               Qp;t ða ;  Þ. The correspondence is very good: the aggre-
+Þ ¼ 1  cPdfðÞ is again larger than for the Poisonian                gation of all the clusters within an avalanche is ultimately
+process, leading to an under representation of intermediate            building a large decorrelation area, also seen on the corre-
+lag times. [Note that the Poissonian distribution computed             lation function Qp;t ða ;  Þ. More interestingly, each clus-
+from a randomly generated data set with the same cardi-                ter in the middle panel of Fig. 4 is colored according to a
+nality and the same average (green squares) is identical to            color gradient corresponding to the time at which it occurs,
+the analytical curve, excluding any finite size effect in the          thereby underlining the way a first cluster of cage jumps
+above observation.] In the inset, one can see the two lag              has given rise to successive neighboring clusters.
+time distributions corresponding to events separated by,                  To summarize, we have identified a two time scales
+respectively, less and more than  ; these exponential                process that give rise to DH and is responsible for macro-
+distributions reveal two very different typical decay times            scopic relaxation. At short times, the particles collectively
+(s ¼ 120 and l ¼ 1190). This separation of times under-              jump within clusters whose sizes are very largely distrib-
+lines the aggregation of the clusters of cage jumps into               uted. These clustered jumps trigger other ones nearby
+separated avalanches. The short time scale s corresponds              within an avalanche process. The lifetime of such ava-
+
+
+
+
+FIG. 4 (color online). Left: Cumulated probability distribution of the duration between spatially adjacent clusters. Experimental data
+are in red circles, while green squares stand for a set of equal cardinality generated from an exponential distribution with the same
+mean value. The black curve is the analytical version of this same distribution. The actual distribution and the exponential ones cross at
+the lag time  ¼ 720. Inset: Distribution of the lags below  (blue triangles) and above (magenta crosses). Middle: Spatial location of
+successive clusters of cage jumps. Colors correspond to the time at which clusters occur. Right: Spatial field of the two point
+correlation function Qp;t ða ;  Þ.
+                                                               088001-3
+                                                                                                                   week ending
+PRL 102, 088001 (2009)                   PHYSICAL REVIEW LETTERS                                               27 FEBRUARY 2009
+
+lanches is much smaller than the time scale between two            same ones we identified for granular media. Finally, it
+avalanches in a similar location or, analogously, between          would be interesting to know how the processes we iden-
+successive cage jumps of a given grain. DH are strongest           tified evolved with density and, in particular, which of the
+on a time scale which corresponds to the crossover between         DF and soft modes become more important when increas-
+these last two. It is interesting to discuss our results within    ing the density.
+the perspectives provided by current theoretical ap-                   We would like to thank J. P. Bouchaud, P. Harrowell,
+proaches. Dynamic facilitation (DF) is one mechanism               S. Aumaitre, F. Lechenault for helpful discussions as well
+put forward to explain slow and glassy dynamics.                   as V. Padilla and C. Gasquet for technical assistance on the
+Theoretical approaches based on DF usually focus on                experiment.
+kinetically constrained models [11,22,23]. They are char-
+acterized by a common mechanism leading to slow dy-
+namics: relaxation is due to mobile facilitating regions that
+are rare and move slowly across the system. Here, we find a         [1] A. Liu and S. Nagel, Nature (London) 396, 21 (1998).
+dynamics characterized by avalanches inside which clus-             [2] G. Biroli, Nature Phys. 3, 222 (2007).
+ters are facilitating each other. It is important to remark that    [3] R. Mari, F. Krzakala, and J. Kurchan, arXiv:0806.3665.
+the fraction of particles relaxing because of facilitation,         [4] L. Berthier and T. Witten, arXiv:0810.4405.
+i.e., belonging to a cluster but the first one (in time) of an      [5] L. Berthier and G. Biroli, Encyclopedia of Complexity and
+avalanche, is close to 0.85. However, in our system facil-              Systems Science (Springer, New York, 2008).
+itation is not conserved as in kinetically constrained mod-         [6] G. Marty and O. Dauchot, Phys. Rev. Lett. 94, 015701
+els since the first cluster of an avalanche is far from any             (2005).
+other possible facilitating region. Why then do particles           [7] O. Dauchot, G. Marty, and G. Biroli, Phys. Rev. Lett. 95,
+jump in the first cluster of an avalanche? This is hardly a             265701 (2005).
+                                                                    [8] A. Abate and D. Durian, Phys. Rev. E 74, 031308
+pure random event since it is already a collective phenome-
+                                                                        (2006).
+non clustered in space and time. Promising candidates to            [9] F. Lechenault, O. Dauchot, G. Biroli, and J. P. Bouchaud,
+explain it are the so-called soft modes or soft regions. It has         Europhys. Lett. 83, 46 003 (2008).
+been shown that for hard spheres close to jamming [12] and         [10] F. Lechenault, O. Dauchot, G. Biroli, and J. P. Bouchaud,
+for moderately supercooled liquids [13] a significant frac-             Europhys. Lett. 83, 46 002 (2008).
+tion of the dynamical evolution takes place along the soft         [11] J. P. Garrahan and D. Chandler, Phys. Rev. Lett. 89,
+modes and dynamic heterogeneity is strongly correlated                  035704 (2002).
+with the softest regions. One can then conjecture that the         [12] C. Brito and M. Wyart, J. Stat. Mech. (2007) L08003.
+first clusters of avalanches correlate with the softest regions    [13] A. Widmer-Cooper, H. Perry, P. Harrowell, and D. R.
+of the system. The resulting scenario is a mixture of the one           Reichman, Nature Phys. 4, 711 (2008).
+based on soft modes and the one based on DF: dynamical             [14] C. Donati, S. Franz, S. Glotzer, and G. Parisi, J. Non-
+                                                                        Cryst. Solids 307, 215 (2002).
+evolution starts from the softest regions but then propagate
+                                                                   [15] G. Biroli and J. Bouchaud, Europhys. Lett. 67, 21 (2004).
+on larger length scales by dynamic facilitation. Note that         [16] V. Lubchenko and P. G. Wolynes, Annu. Rev. Phys. Chem.
+the relationship between these two pictures has also been               58, 235(2007).
+discussed recently in an analysis of a kinetically con-            [17] G. Biroli, J.-P. Bouchaud, A. Cavagna, T. Grigera, and
+strained model [24]. Still, without having computed the                 P. Verrocchio, Nature Phys. 4, 771 (2008).
+soft modes in a frictional packing one cannot eliminate            [18] G. H. Fredrickson and H. C. Andersen, Phys. Rev. Lett. 53,
+other possible (maybe complementary) mechanisms such                    1244 (1984).
+as hopping between local minima in energy landscape [25].          [19] M. Falk and J. Langer, Phys. Rev. E 57, 7192 (1998).
+It is also interesting to remark that the mode coupling            [20] C. Donati, S. Glotzer, P. Poole, W. Kob, and S. Plimpton,
+theory of the glass transition is based on the emergence                Phys. Rev. E 60, 3107 (1999).
+of soft modes and predicts [26], as we find, that dynamical        [21] G. Appignanesi, J. Rodriguez Fris, R. Montani, and
+                                                                        W. Kob, Phys. Rev. Lett. 96, 057801 (2006).
+correlated structures thicken in time. Obviously, all such
+                                                                   [22] F. Ritort and P. Sollich, Adv. Phys. 52, 219 (2003).
+conjectures call for further investigation. From the experi-       [23] C. Toninelli, G. Biroli, and D. Fisher, Phys. Rev. Lett. 96,
+mental point of view, one would like to identify the soft               035702 (2006).
+modes and check their correlation with the clusters we             [24] D. J. Ashton and J. P. Garrahan, arXiv:0808.2412.
+identified. Repeating the present study in simulations of          [25] B. Doliwa and A. Heuer, Phys. Rev. E 67, 031506 (2003).
+glass-forming liquids would be certainly very instructive.         [26] G. Biroli, J.-P. Bouchaud, K. Miyasaki, and D. R.
+One could check whether the building blocks of DH are the               Reichman, Phys. Rev. Lett. 97, 195701 (2006).
+
+
+
+
+                                                             088001-4
+

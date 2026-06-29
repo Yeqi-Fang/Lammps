@@ -1,0 +1,65 @@
+category,parameter,value,status,source,reference_note,implementation_rule
+scope,covered_figures,"Fig.1(a-c); Fig.2; Fig.3; Fig.4",paper,Zeng main text and figure captions,Fig.4 is BD; Fig.5-Fig.7 are excluded,Do not mix MD data into BD reproduction
+system,dimension,3D,paper,Zeng Appendix A; PRX Ref33,BD simulation is three-dimensional,Use 3 coordinates and 3D cluster volume
+system,total_particles,20000,paper,Zeng Appendix A; PRX Ref33,Ns=4000 and Nb=16000,Use N=20000 for strict Zeng BD
+system,small_particles,4000,paper,Zeng Appendix A; PRX Ref33,Ns=4000,Type must distinguish small particles
+system,big_particles,16000,paper,Zeng Appendix A; PRX Ref33,Nb=16000,Type must distinguish big particles
+system,diameter_ratio_ds_db,0.6666666667,paper,Zeng Appendix A; PRX Ref33,ds/db=2/3,Use db as length unit
+system,volume_fractions,"0.425; 0.45",paper,Zeng Appendix A,Two BD phi values,Run both for Fig.1(a); phi=0.45 is core cluster condition
+units,length_unit,d0=db,paper,Zeng Appendix A,Length unit for BD,Report lengths in d0
+units,time_unit,tau0=db^2/D0,paper,Zeng Appendix A; PRX Ref33,BD time unit,Report shear rate as gamma_dot*tau0
+units,stress_unit,kBT/d0^3,paper,Zeng Appendix A,BD stress unit,Use for sigma_c
+units,viscosity_unit,kBT*tau0/d0^3,paper,Zeng Appendix A,BD viscosity unit,Use for eta
+potential,model,hard-sphere Yukawa,paper,Zeng Appendix A; PRX Ref33,Hard core plus Yukawa,Do not replace with PCCP r^-36 soft core
+potential,hard_core,potential-free algorithm,paper_with_missing_details,Zeng Appendix A; Foss-Brady Ref60; missing Heyes-Melrose Ref61,Zeng cites Ref60 and Ref61,Need Ref61 before claiming exact hard-core implementation
+potential,yukawa_formula,"K exp[-z(r-dij)]/(r/dij), r>=dij",paper,Zeng Appendix A; PRX Ref33,dij=(di+dj)/2,Use differentiable Yukawa force for viscosity/stress
+potential,yukawa_z,4.86/db,paper,Zeng Appendix A; PRX Ref33; PCCP Ref40,SANS-derived parameter,Use z=4.86 in db units
+potential,yukawa_K,9.69 kBT,paper,Zeng Appendix A; PRX Ref33; PCCP Ref40,SANS-derived parameter,Use K=9.69 in kBT units
+potential,cutoff,5db,paper,Zeng Appendix A; PRX Ref33,Yukawa truncation,Neighbor cutoff for Yukawa force/stress
+potential,pccp_soft_core_r36,not_for_zeng_main,not_allowed_as_zeng_fact,PCCP ESI c8cp05247f1.pdf,Old N=3000 phi=0.4 auxiliary BD used r^-36 core,Only document as historical reference
+shear,flow_direction,x,paper,Zeng Sec. II; PRX Ref33,Couette flow,Use x velocity direction
+shear,gradient_direction,y,paper,Zeng Sec. II; PRX Ref33,Couette flow,Use y gradient direction
+shear,boundary,Lees-Edwards,paper,Zeng Sec. II; PRX Ref33; PCCP ESI,Sliding brick boundary,Save enough data to reconstruct nonaffine trajectories
+shear,peclet_definition,Pe=gamma_dot*tau0/4,paper,PRX Ref33,Pe=gamma_dot*db^2/(4D0),Use Pe values 0.25;0.75;2.5;5 for rates 1;3;10;20
+simulation,target_rates_gamma_tau0,"1; 3; 10; 20",paper,Zeng Fig.1/Fig.4 context and Appendix A analysis intervals,High-shear BD conditions,Use gamma=3 as core representative condition
+simulation,core_condition,"phi=0.45; gamma_dot*tau0=3",paper,Zeng Fig.1(b); Fig.2; Fig.4,Representative BD cluster,Use same cluster across Fig.1(b), Fig.2, Fig.4(a)
+simulation,bd_integrator_timestep,missing,missing,Zeng/PRX do not state numeric integrator dt,Appendix A Delta t is analysis interval not proven integrator dt,Determine by convergence test or author protocol; never report as paper fact
+simulation,equilibration_length,missing,missing,Zeng/PRX do not state,Several thousand cycles in PCCP ESI are for older N=3000 phi=0.4 system,Do not adopt as strict Zeng value
+simulation,production_length,missing,missing,Zeng/PRX do not state,At least two million cycles in PCCP ESI are for older N=3000 phi=0.4 system,Do not adopt as strict Zeng value
+simulation,steady_state_discard,missing,missing,Zeng/PRX do not state,Adequate time steps after steady state is qualitative,Define only as explicit assumption or obtain from author
+simulation,independent_samples,missing,missing,Zeng/PRX do not state,No seed/sample count given,Record all seeds and sample count if reproduced
+output,positions,required,derived_requirement,Zeng Appendix B; Yamamoto-Onuki Ref13,Need nonaffine trajectories,Save lab-frame or reconstructable coordinates
+output,types,required,derived_requirement,Zeng binary mixture,Need big/small volumes,Save particle type for all particles
+output,lees_edwards_reconstruction,required,derived_requirement,Zeng Appendix B shear-adjusted distance,Need unwrap/image/tilt/shear strain,Save enough data to reconstruct nonaffine displacement
+output,yukawa_force_or_recomputable_positions,required,derived_requirement,Zeng Eq.1 and Eq.2,Need dV/dr for viscosity and sigma_c,Prefer recomputing differentiable Yukawa stress from coordinates
+analysis,analysis_delta_t_rate_1,0.005 tau0,paper,Zeng Appendix A,Analysis time interval for many quantities,Do not confuse with integrator timestep
+analysis,analysis_delta_t_rate_3,0.005 tau0,paper,Zeng Appendix A,Analysis time interval for many quantities,Core Fig.2/Fig.4 condition
+analysis,analysis_delta_t_rate_10,0.002 tau0,paper,Zeng Appendix A,Analysis time interval for many quantities,Do not confuse with integrator timestep
+analysis,analysis_delta_t_rate_20,0.001 tau0,paper,Zeng Appendix A,Analysis time interval for many quantities,Do not confuse with integrator timestep
+analysis,cage_jump_algorithm,Candelier,paper,Zeng Appendix B; Candelier Refs36-37,Supplement needed for implementation details,Use nonaffine trajectory under shear
+analysis,cage_size_lc2,0.05,paper,Zeng Appendix B,BD cage-size threshold,Use pmax<lc^2 stopping rule
+analysis,overlap_cutoff_a,0.2,paper,Zeng Appendix B,BD chi4 overlap cutoff,Use shear-adjusted overlap distance
+analysis,chi4_definition,"beta*V/N^2*(<Q^2>-<Q>^2)",paper,Zeng Appendix B; Lacevic Ref43,Q uses double sum overlap,Do not substitute unscaled proxy without marking approximation
+analysis,particle_filter_for_cage_jumps,all_particles,assumption_from_text,Zeng Appendix B uses N and Fig.1(b) does not say big-only,Paper does not specify big-only cage jumps,Default to all particles; big-only must be flagged as assumption
+analysis,bd_coarse_sieve_d_rate_1,L/10,paper,Zeng Appendix B,BD coarse blocks,Use coarse grid 10 per dimension
+analysis,bd_coarse_sieve_d_rate_3,L/10,paper,Zeng Appendix B,BD coarse blocks,Use coarse grid 10 per dimension
+analysis,bd_coarse_sieve_d_rate_10,L/10,paper,Zeng Appendix B,BD coarse blocks,Use coarse grid 10 per dimension
+analysis,bd_coarse_sieve_d_rate_20,L/20,paper,Zeng Appendix B,BD coarse blocks,Use coarse grid 20 per dimension
+analysis,threshold_tolerance_C,10%,paper,Zeng Appendix B,Tested 5-10% for BD,Use C=10%
+analysis,undersize_grid_d_prime,L/30,paper,Zeng Appendix B,3D systems,Use after coarse sieve; not a substitute for coarse grid
+analysis,cluster_min_volume_factor_Cprime,2,paper,Zeng Appendix B,C'=2 for all conditions,Use Vc,ll=2*Vstz
+analysis,stz_spot_diameter,about_3d0,paper,Zeng Fig.2 discussion,Cage-jump spots diameter around 3d0,Use only for Vstz scale; exact spot geometry not given
+analysis,viscosity_formula,"eta=-<sum_i r_ix f_iy>/(V gamma_dot)",paper,Zeng Eq.1; PRX Ref33 Eq.10,Yukawa contribution emphasized,eta must be positive under sign convention
+analysis,atomic_stress_formula,Zeng Eq.2,paper,Zeng Eqs.2-4,Uses dV/dr and particle volume,Use Yukawa differentiable force unless hard-core stress is proven required
+analysis,hard_core_collision_stress_in_sigma_c,excluded_by_default,inference,Zeng Eq.1/PRX emphasize Yukawa and Eq.2 requires differentiable dV/dr,Hard-core contribution not explicitly included,Flag if included
+analysis,local_strain_gamma_c,Zeng Eqs.5-7,paper,Zeng Eqs.5-7; Falk-Langer Ref46,Local strain from minimizing nonaffine displacement,Use same cluster F
+analysis,n_cj_window,"[t-Delta t/2,t+Delta t/2]",paper,Zeng Fig.2 discussion,Temporal cage-jump density,Use analysis Delta t
+analysis,P_ext_definition,"projection of cage-jump vector in shear plane lies in quadrant I or III",paper,Zeng Fig.2 discussion,Extensional direction percentage,Use nonaffine cage-jump displacement vector
+analysis,R_definition,"1-N_res(t)/N_res(t0)",paper,Zeng Fig.2 discussion,Nres particles inside boundary at t0 still inside at t,Use same traced boundary
+analysis,t_chi_window_start,missing,missing,Zeng gives t_chi not selected start time,Fig.1(b) exact window metadata absent,Require manual metadata or mark data-driven selection
+analysis,selected_cluster_id,missing,missing,Zeng only shows red boundary in Fig.1(b),Original cluster ID unavailable,Require manual selection from reproduced Fig.1(b) or mark largest-cluster assumption
+analysis,characteristic_times,"t_prime;t0;t1;t2;t3",missing,Zeng marks by dashed lines but gives no numeric values,Need raw data or image digitization/manual config,Do not silently use heuristic as paper result
+fig4,phm_method,missing_method_details,missing,Zeng cites Ref57 Richard et al. PRL,Current local packet lacks Ref57 full method,Do not generate replacement PHM figure
+validation,D_LS_phi_0p425,about_0.06D0,paper,Zeng Appendix A; PRX Ref33,Supercooled-state check,Recompute from quiescent phi=0.425 BD if possible
+validation,eta_positive,required,derived_requirement,Zeng Eq.1,eta=-stress/gamma_dot should be positive,Fail validation if sign convention inconsistent
+validation,shear_thinning,required,paper,Zeng Fig.1(a),High-shear eta~gamma_dot^-lambda,Fit only documented high-shear rates

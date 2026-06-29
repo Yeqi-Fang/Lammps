@@ -91,7 +91,7 @@ $$\tilde{r}_i(t) = r_i(t) - r_i(0) - \dot\gamma \cdot t \cdot y_i(0)\, \hat{x}$$
 - 中间：平台区，$l_c^2 \approx 0.057\,\sigma_{bb}^2$（笼内振动）
 - 长时：$\langle\tilde{r}^2\rangle \propto t$（扩散）
 
-> ⚠ **注意**：γ̇ = 0.015 时帧数约 100 帧。平台可能不明显。  
+> ⚠ **注意**：当前主 dump 间隔为 `0.02/γ̇`，γ̇ = 0.015 时约 2500 帧。
 > 脚本会自动使用论文给出的 $l_c^2 = 0.057$。
 
 ---
@@ -142,10 +142,10 @@ python3 plot_summary.py --data . --output figures/
 需要**多个剪切率**的数据。当前只有 γ̇ = 0.015。
 建议运行：
 ```bash
-for SR in 0.003 0.005 0.01 0.015 0.02 0.05 0.1; do
-    mpirun -np 6 lmp -in in.shear_template \
+for SR in 0.005 0.015 0.030 0.060; do
+    mpirun -np 56 lmp_oneapi -in in.shear_template \
         -var SHEAR_RATE $SR \
-        -var DT $(python3 -c "print(0.003 if $SR<=0.01 else 0.001)") \
+        -var DT $(python3 -c "print(0.003 if abs($SR-0.005)<1e-12 else 0.001)") \
         -var SEED 12345 \
         -log log.shear_$SR
 done
@@ -168,12 +168,12 @@ done
 
 ## 帧数说明
 
-对于 γ̇ = 0.015，dt = 0.005：
-- `DUMP_EVERY` = round(0.5/(0.015×0.005)) = **6667 步**
-- `N_prod` = round(50/(0.015×0.005)) = **666667 步**
-- **约 100 帧**（生产跑总共 50 个应变单位，每 0.5 输出一帧）
+对于 γ̇ = 0.015，dt = 0.001：
+- `DUMP_EVERY` = round(0.02/(0.015×0.001)) = **1333 步**
+- `N_prod` = round(50/(0.015×0.001)) = **3333333 步**
+- **约 2500 帧**（生产跑总共 50 个应变单位，每 0.02 应变输出一帧）
 
-100 帧对于 MSD 平台和笼跳跃检测是**偏少**的。可通过 `--max_frames` 参数控制。
+2500 帧足够做高剪切率 MSD/FSQT/cage-jump 的初步统计；低剪切率仍会非常耗时。
 
 ---
 

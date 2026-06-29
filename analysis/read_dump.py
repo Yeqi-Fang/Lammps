@@ -3,35 +3,33 @@ read_dump.py
 ============
 LAMMPS dump 文件解析器（支持正交/斜交盒子，Lees-Edwards BC）
 
-输出格式：
-    frames : list of dict, 每帧包含
-        - 'timestep'  : int
-        - 'natoms'    : int
-        - 'box'       : dict  {xlo,xhi,ylo,yhi,zlo,zhi, xy,xz,yz}  (triclinic)
-        - 'id'        : (N,) int array
-        - 'type'      : (N,) int array
-        - 'x','y','z' : (N,) float  (wrapped coordinates)
-        - 'ix','iy','iz': (N,) int  (image flags)
-        - 'vx','vy','vz': (N,) float
-        - 'xu','yu','zu': (N,) float  (unwrapped coordinates, computed here)
+Bug 修复记录（compute_nonaffine_displacement）：
+─────────────────────────────────────────────
+旧版错误：
+    xu = x + ix*Lx + iy*xy
+    r_tilde_x = xu(t) - xu(0) - γ̇*t*y0
+
+  当粒子穿越 y 周期边界时，LAMMPS 把粒子的 x 向左/右偏移了 xy（LE 边界条件）。
+  这导致 xu 每次穿越 y 边界时都跳变 +2*xy。
+  对于 γ̇=0.005，xy ≈ Lx/2 约在 t~100τ₀ 时触发一次 LE remap，产生图中的阶梯。
+
+修复方案：逐帧累积（incremental）+ LE 正确最近像惯例
+─────────────────────────────────────────────────────
+  对连续两帧的 wrapped 坐标差 Δr = r(t+dt) - r(t)：
+
+  1. y 方向：n_y = round(Δy/Ly)；Δy -= n_y*Ly
+  2. x 方向（LE 耦合）：
+       Δx -= n_y * xy_current   # 穿越 y 边界时 x 有 ±xy 的 LE 偏移，要扣掉
+       n_x = round(Δx/Lx)；Δx -= n_x*Lx
+  3. z 方向：普通最近像
+  4. 仿射减除：Δx_na = Δx - γ̇ * dt * yu_prev
+       yu_prev = y_prev + iy_prev*Ly  （y 方向 unwrap，对 iy 变化连续）
+
+  累积到 r_tilde。γ̇=0 时仿射项为零，退化为标准增量 MSD。
 """
 
 import numpy as np
-import re
 from typing import List, Dict, Optional
-
-
-def _parse_box_bounds(lines):
-    """解析盒子边界，支持正交和斜交(tilt)格式。"""
-    box = {}
-    tilt = {'xy': 0.0, 'xz': 0.0, 'yz': 0.0}
-    for line in lines:
-        m = re.match(r'ITEM: BOX BOUNDS', line)
-        if m:
-            # 检查是否有 tilt 关键字
-            if 'xy xz yz' in line:
-                return 'triclinic'
-    return 'orthogonal'
 
 
 def read_lammps_dump(filename: str,
@@ -40,143 +38,106 @@ def read_lammps_dump(filename: str,
     """
     读取 LAMMPS custom dump 文件。
 
-    Parameters
-    ----------
-    filename : str
-        dump 文件路径
-    max_frames : int, optional
-        最多读取帧数（None = 全部）
-    stride : int
-        每隔 stride 帧读一帧
-
-    Returns
-    -------
-    frames : list of dict
+    支持格式：id type x y z ix iy iz [vx vy vz]
+              id type xu yu zu [...]
     """
     frames = []
     frame_count = 0
-    read_count = 0
+    read_count  = 0
 
-    with open(filename, 'r') as f:
+    with open(filename, 'r') as fh:
         while True:
-            # --- ITEM: TIMESTEP ---
-            line = f.readline()
+            line = fh.readline()
             if not line:
                 break
             if 'ITEM: TIMESTEP' not in line:
                 continue
-            timestep = int(f.readline().strip())
+            timestep = int(fh.readline().strip())
 
-            # --- ITEM: NUMBER OF ATOMS ---
-            f.readline()  # ITEM: NUMBER OF ATOMS
-            natoms = int(f.readline().strip())
+            fh.readline()
+            natoms = int(fh.readline().strip())
 
-            # --- ITEM: BOX BOUNDS ---
-            box_header = f.readline()  # ITEM: BOX BOUNDS ...
-            triclinic = ('xy xz yz' in box_header)
-
-            xlo, xhi = 0.0, 0.0
-            ylo, yhi = 0.0, 0.0
-            zlo, zhi = 0.0, 0.0
-            xy, xz, yz = 0.0, 0.0, 0.0
+            box_header = fh.readline()
+            triclinic  = ('xy xz yz' in box_header)
 
             if triclinic:
-                vals = f.readline().split()
-                xlo_b, xhi_b, xy = float(vals[0]), float(vals[1]), float(vals[2])
-                vals = f.readline().split()
-                ylo_b, yhi_b, xz = float(vals[0]), float(vals[1]), float(vals[2])
-                vals = f.readline().split()
-                zlo_b, zhi_b, yz = float(vals[0]), float(vals[1]), float(vals[2])
-                # 转换为真实盒子边长（LAMMPS convention）
+                v = fh.readline().split()
+                xlo_b, xhi_b, xy = float(v[0]), float(v[1]), float(v[2])
+                v = fh.readline().split()
+                ylo_b, yhi_b, xz = float(v[0]), float(v[1]), float(v[2])
+                v = fh.readline().split()
+                zlo_b, zhi_b, yz = float(v[0]), float(v[1]), float(v[2])
                 xlo = xlo_b - min(0.0, xy, xz, xy + xz)
                 xhi = xhi_b - max(0.0, xy, xz, xy + xz)
                 ylo = ylo_b - min(0.0, yz)
                 yhi = yhi_b - max(0.0, yz)
-                zlo = zlo_b
-                zhi = zhi_b
+                zlo, zhi = zlo_b, zhi_b
             else:
-                vals = f.readline().split(); xlo, xhi = float(vals[0]), float(vals[1])
-                vals = f.readline().split(); ylo, yhi = float(vals[0]), float(vals[1])
-                vals = f.readline().split(); zlo, zhi = float(vals[0]), float(vals[1])
+                xy = xz = yz = 0.0
+                v = fh.readline().split(); xlo, xhi = float(v[0]), float(v[1])
+                v = fh.readline().split(); ylo, yhi = float(v[0]), float(v[1])
+                v = fh.readline().split(); zlo, zhi = float(v[0]), float(v[1])
 
             Lx = xhi - xlo
             Ly = yhi - ylo
             Lz = zhi - zlo
-
             box = dict(xlo=xlo, xhi=xhi, ylo=ylo, yhi=yhi, zlo=zlo, zhi=zhi,
                        Lx=Lx, Ly=Ly, Lz=Lz, xy=xy, xz=xz, yz=yz)
 
-            # --- ITEM: ATOMS ---
-            atom_header = f.readline()  # ITEM: ATOMS id type x y z ...
-            col_names = atom_header.strip().split()[2:]  # 去掉 "ITEM:" "ATOMS"
-            col_idx = {name: i for i, name in enumerate(col_names)}
+            atom_header = fh.readline()
+            col_names   = atom_header.strip().split()[2:]
+            col_idx     = {name: i for i, name in enumerate(col_names)}
 
-            # 读取原子数据
-            data = np.zeros((natoms, len(col_names)), dtype=float)
+            raw = np.zeros((natoms, len(col_names)), dtype=float)
             for i in range(natoms):
-                data[i] = f.readline().split()
+                raw[i] = fh.readline().split()
 
-            # 检查是否使用此帧（stride）
             frame_count += 1
             if (frame_count - 1) % stride != 0:
                 continue
 
-            # 提取各列
-            def get_col(name):
-                if name in col_idx:
-                    return data[:, col_idx[name]]
-                return None
+            def get(name, dtype=float):
+                return raw[:, col_idx[name]].astype(dtype) if name in col_idx else None
 
-            ids    = get_col('id').astype(int)
-            types  = get_col('type').astype(int)
-            x = get_col('x')
-            y = get_col('y')
-            z = get_col('z')
-            ix = get_col('ix')
-            iy = get_col('iy')
-            iz = get_col('iz')
-            vx = get_col('vx')
-            vy = get_col('vy')
-            vz = get_col('vz')
+            ids   = get('id',   dtype=int)
+            types = get('type', dtype=int)
 
-            # 按 id 排序（LAMMPS 输出顺序可能不一致）
-            sort_idx = np.argsort(ids)
-            ids   = ids[sort_idx]
-            types = types[sort_idx]
-            x = x[sort_idx]; y = y[sort_idx]; z = z[sort_idx]
-            if ix is not None:
-                ix = ix[sort_idx].astype(int)
-                iy = iy[sort_idx].astype(int)
-                iz = iz[sort_idx].astype(int)
+            has_wrapped = ('x' in col_idx and 'y' in col_idx and 'z' in col_idx)
+            if has_wrapped:
+                x  = get('x');  y  = get('y');  z  = get('z')
+                ix = get('ix', dtype=int) if 'ix' in col_idx else np.zeros(natoms, int)
+                iy = get('iy', dtype=int) if 'iy' in col_idx else np.zeros(natoms, int)
+                iz = get('iz', dtype=int) if 'iz' in col_idx else np.zeros(natoms, int)
             else:
-                ix = np.zeros(natoms, int)
-                iy = np.zeros(natoms, int)
-                iz = np.zeros(natoms, int)
-            if vx is not None:
-                vx = vx[sort_idx]; vy = vy[sort_idx]; vz = vz[sort_idx]
-            else:
-                vx = vy = vz = np.zeros(natoms)
+                x  = get('xu'); y  = get('yu'); z  = get('zu')
+                ix = iy = iz = np.zeros(natoms, int)
 
-            # 计算 unwrapped 坐标
-            # 对斜交盒子（Lees-Edwards）：
-            # x_u = x + ix*Lx + iy*xy    (x 方向有 tilt)
-            # y_u = y + iy*Ly
-            # z_u = z + iz*Lz
-            xu = x + ix * Lx + iy * xy
-            yu = y + iy * Ly
+            vx = get('vx') if 'vx' in col_idx else np.zeros(natoms)
+            vy = get('vy') if 'vy' in col_idx else np.zeros(natoms)
+            vz = get('vz') if 'vz' in col_idx else np.zeros(natoms)
+
+            order = np.argsort(ids)
+            def srt(a): return a[order] if a is not None else a
+            ids   = srt(ids);  types = srt(types)
+            x = srt(x); y = srt(y); z = srt(z)
+            ix = srt(ix); iy = srt(iy); iz = srt(iz)
+            vx = srt(vx); vy = srt(vy); vz = srt(vz)
+
+            # xu/yu/zu 供 F_s(q,t) 使用（LE 下穿越 y 边界时不连续，不用于 MSD）
+            xu = x + ix * Lx + iy * xy + iz * xz
+            yu = y + iy * Ly + iz * yz
             zu = z + iz * Lz
 
-            frame = dict(
+            frames.append(dict(
                 timestep=timestep, natoms=natoms, box=box,
                 id=ids, type=types,
                 x=x, y=y, z=z,
                 ix=ix, iy=iy, iz=iz,
                 vx=vx, vy=vy, vz=vz,
                 xu=xu, yu=yu, zu=zu,
-            )
-            frames.append(frame)
+                _has_image_flags=has_wrapped,
+            ))
             read_count += 1
-
             if max_frames is not None and read_count >= max_frames:
                 break
 
@@ -190,44 +151,96 @@ def compute_nonaffine_displacement(frames: List[Dict],
     """
     计算 Yamamoto-Onuki 非仿射位移 r̃(t)。
 
-    r̃_i(t) = [r_i^unwrap(t) - r_i^unwrap(0)] - γ̇ * t * y_i^unwrap(0) * x̂
+    使用逐帧累积 + LE 正确最近像，避免 xu 重建在 LE 下的不连续问题。
 
     Parameters
     ----------
-    frames     : list of frame dicts (sorted by time)
-    shear_rate : float, γ̇ (LJ units)
-    dt_frame   : float, 帧间时间间隔 (LJ units)
+    frames     : list of frame dicts
+    shear_rate : float，γ̇（γ̇=0 时退化为标准增量 MSD）
+    dt_frame   : float，帧间物理时间（LJ 单位）
 
     Returns
     -------
-    r_tilde : (N_frames, N_atoms, 3) array
-        非仿射位移，轴序 [frame, atom, xyz]
+    r_tilde : (N_frames, N_atoms, 3) float64
     """
     N_frames = len(frames)
     N_atoms  = frames[0]['natoms']
+    r_tilde  = np.zeros((N_frames, N_atoms, 3), dtype=np.float64)
 
-    r_tilde = np.zeros((N_frames, N_atoms, 3))
+    if not frames[0].get('_has_image_flags', True):
+        print("  ⚠ 无 image flags，回退到 xu 差分法")
+        return _nonaffine_from_xu(frames, shear_rate, dt_frame)
 
-    # 参考帧 (t=0)
-    x0 = frames[0]['xu'].copy()
-    y0 = frames[0]['yu'].copy()
-    z0 = frames[0]['zu'].copy()
+    box0 = frames[0]['box']
+    Lx, Ly, Lz = box0['Lx'], box0['Ly'], box0['Lz']
 
-    for fi, frame in enumerate(frames):
-        t = fi * dt_frame  # 从参考帧开始的时间
+    acc     = np.zeros((N_atoms, 3), dtype=np.float64)
+    x_prev  = frames[0]['x'].copy().astype(np.float64)
+    y_prev  = frames[0]['y'].copy().astype(np.float64)
+    z_prev  = frames[0]['z'].copy().astype(np.float64)
+    # unwrapped y：y + iy*Ly，对 iy 跳变连续，用于仿射减除
+    yu_prev = (frames[0]['y'] + frames[0]['iy'] * Ly).astype(np.float64)
 
-        dx = frame['xu'] - x0
-        dy = frame['yu'] - y0
-        dz = frame['zu'] - z0
+    for fi in range(1, N_frames):
+        f  = frames[fi]
+        xy = f['box']['xy']   # 当前帧 LE tilt
 
-        # 减去仿射贡献：Δx_affine = γ̇ * t * y_i(0)
-        dx_affine = shear_rate * t * y0
+        x_curr  = f['x'].astype(np.float64)
+        y_curr  = f['y'].astype(np.float64)
+        z_curr  = f['z'].astype(np.float64)
+        yu_curr = y_curr + f['iy'].astype(np.float64) * Ly
 
-        r_tilde[fi, :, 0] = dx - dx_affine
-        r_tilde[fi, :, 1] = dy
-        r_tilde[fi, :, 2] = dz
+        dx = x_curr - x_prev
+        dy = y_curr - y_prev
+        dz = z_curr - z_prev
+
+        # ── LE 正确最近像 ──────────────────────────────────────────────
+        # 1. y 方向（普通周期）
+        n_y = np.round(dy / Ly)
+        dy -= n_y * Ly
+
+        # 2. x 方向：先扣掉 LE 的 y 穿越偏移，再取 x 最近像
+        #    粒子穿越 y+ 边界时，LAMMPS 把 x 向右偏移了 +xy；
+        #    n_y 次穿越共偏移 n_y * xy，需先扣掉才能正确取 x 模
+        dx -= n_y * xy
+        n_x = np.round(dx / Lx)
+        dx -= n_x * Lx
+
+        # 3. z 方向（普通周期）
+        n_z = np.round(dz / Lz)
+        dz -= n_z * Lz
+
+        # ── 减去仿射贡献（增量形式）────────────────────────────────────
+        #   使用上一帧的 unwrapped y（y + iy*Ly），对边界穿越连续
+        dx -= shear_rate * dt_frame * yu_prev
+
+        acc[:, 0] += dx
+        acc[:, 1] += dy
+        acc[:, 2] += dz
+        r_tilde[fi] = acc.copy()
+
+        x_prev  = x_curr
+        y_prev  = y_curr
+        z_prev  = z_curr
+        yu_prev = yu_curr
 
     return r_tilde
+
+
+def _nonaffine_from_xu(frames, shear_rate, dt_frame):
+    """旧方法（无 image flags 时 fallback）。"""
+    N = len(frames)
+    M = frames[0]['natoms']
+    rt = np.zeros((N, M, 3), dtype=np.float64)
+    x0 = frames[0]['xu'].astype(np.float64)
+    y0 = frames[0]['yu'].astype(np.float64)
+    z0 = frames[0]['zu'].astype(np.float64)
+    for fi, f in enumerate(frames):
+        t = fi * dt_frame
+        rt[fi, :, 0] = f['xu'] - x0 - shear_rate * t * y0
+        rt[fi, :, 1] = f['yu'] - y0
+        rt[fi, :, 2] = f['zu'] - z0
+    return rt
 
 
 if __name__ == '__main__':
@@ -235,6 +248,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         frames = read_lammps_dump(sys.argv[1], max_frames=3)
         print(f"Frames: {len(frames)}, Atoms: {frames[0]['natoms']}")
-        print(f"Box: Lx={frames[0]['box']['Lx']:.4f}, "
-              f"Ly={frames[0]['box']['Ly']:.4f}, "
-              f"xy={frames[0]['box']['xy']:.4f}")
+        b = frames[0]['box']
+        print(f"Box: Lx={b['Lx']:.4f}, Ly={b['Ly']:.4f}, xy={b['xy']:.6f}")
+        print(f"Image flags: {frames[0].get('_has_image_flags', False)}")

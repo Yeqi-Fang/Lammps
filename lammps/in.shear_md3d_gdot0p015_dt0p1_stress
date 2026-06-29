@@ -1,0 +1,114 @@
+# ===========================================================================
+# Zeng 3D KA MD high-resolution trajectory for Fig. 5(b) / Fig. 6 left
+# Fixed condition: gamma_dot*tau0 = 0.015, dt = 0.001, Delta t = 0.1 tau0
+#
+# Purpose:
+#   Produce the single high-resolution main trajectory used to identify
+#   cage jumps and demarcate the convective cluster. This is not the 50-ICE
+#   stress-replicate run.
+#
+# Required input in current directory:
+#   restart.equil
+#
+# Main outputs:
+#   dump.md3d_gdot0p015_dt0p1_stress.lammpstrj.gz
+#   thermo.md3d_gdot0p015_dt0p1.dat
+#   visc_blockave.md3d_gdot0p015_dt0p1.dat
+#   restart.md3d_gdot0p015_dt0p1.final
+# ===========================================================================
+
+units       lj
+atom_style  atomic
+
+read_restart  restart.equil
+
+# Kob-Andersen binary LJ parameters used in the Zeng 3D MD appendix.
+pair_style  lj/cut  2.5
+pair_coeff  1 1  1.0   1.0   2.5
+pair_coeff  1 2  1.5   0.8   2.5
+pair_coeff  2 2  0.5   0.88  2.5
+pair_modify  shift  yes
+
+neighbor      0.3  bin
+neigh_modify  every 1  delay 0  check yes
+
+variable  SHEAR_RATE  equal  0.015
+variable  DT          equal  0.001
+variable  DELTA_T     equal  0.1
+variable  DAMP        equal  100.0*${DT}
+variable  TEMP        equal  0.45
+variable  N_pre       equal  round(20.0/(${SHEAR_RATE}*${DT}))
+variable  N_prod      equal  round(50.0/(${SHEAR_RATE}*${DT}))
+variable  DUMP_EVERY  equal  round(${DELTA_T}/${DT})
+
+change_box  all  triclinic
+timestep    ${DT}
+
+fix  shear_deform  all  deform  1  xy  erate  ${SHEAR_RATE}  remap  v  flip  yes
+fix  sllod_nvt     all  nvt/sllod  temp  ${TEMP}  ${TEMP}  ${DAMP}
+
+compute  Tdeform all temp/deform
+compute  Pdeform all pressure Tdeform
+
+# Per-atom virial xy term for later cluster-stress analysis.
+# LAMMPS stress/atom uses its native stress*volume sign convention; analysis
+# must compare the summed value against Pxy before final Fig. 6(a) plotting.
+compute  Svirial all stress/atom NULL virial
+compute  SxySum  all reduce sum c_Svirial[4]
+variable pxy_virial_from_atoms equal -c_SxySum/vol
+
+thermo_modify  temp  Tdeform
+thermo_modify  press Pdeform
+thermo        10000
+thermo_style  custom  step  c_Tdeform  c_Pdeform  c_Pdeform[4]  v_pxy_virial_from_atoms
+thermo_modify  flush  yes
+
+print "=========================================="
+print "PRE-RUN: steady shear before production"
+print "  gamma_dot   = ${SHEAR_RATE}"
+print "  dt          = ${DT}"
+print "  N_pre steps = ${N_pre}  (strain = 20)"
+print "=========================================="
+run  ${N_pre}
+
+# Production data starts at step/time 0 while SLLOD fixes continue.
+reset_timestep  0
+
+variable  samp_time      equal  time
+variable  samp_gamma     equal  ${SHEAR_RATE}*time
+variable  samp_temp      equal  c_Tdeform
+variable  samp_press     equal  c_Pdeform
+variable  samp_pxy       equal  c_Pdeform[4]
+variable  samp_npxy      equal  -c_Pdeform[4]
+variable  samp_pxy_atom  equal  v_pxy_virial_from_atoms
+
+print "=========================================="
+print "PRODUCTION RUN: high-resolution main trajectory"
+print "  gamma_dot    = ${SHEAR_RATE}"
+print "  dt           = ${DT}"
+print "  Delta_t      = ${DELTA_T} tau0"
+print "  dump_every   = ${DUMP_EVERY} steps"
+print "  N_prod steps = ${N_prod}  (strain = 50)"
+print "=========================================="
+
+fix  file_thermo  all  ave/time  100  1  100 &
+     v_samp_time  v_samp_gamma  v_samp_temp  v_samp_press  v_samp_pxy  v_samp_pxy_atom &
+     file  thermo.md3d_gdot0p015_dt0p1.dat &
+     title1  "# Zeng 3D MD high-res: gdot=0.015 T=0.45 dt=0.001 Delta_t=0.1" &
+     title2  "# time  gamma  temp  press  pxy_pressure  pxy_from_sum_per_atom_virial"
+
+fix  file_visc  all  ave/time  1  100  100 &
+     v_samp_time  v_samp_npxy &
+     file  visc_blockave.md3d_gdot0p015_dt0p1.dat &
+     title1  "# Block-averaged -<P_xy>: gamma_dot=0.015" &
+     title2  "# time  -pxy_block100"
+
+dump  atom_traj  all  custom/gz  ${DUMP_EVERY} &
+      dump.md3d_gdot0p015_dt0p1_stress.lammpstrj.gz &
+      id  type  x  y  z  ix  iy  iz  xu  yu  zu  vx  vy  vz  c_Svirial[4]
+dump_modify  atom_traj  sort  id
+
+run  ${N_prod}
+
+write_restart  restart.md3d_gdot0p015_dt0p1.final
+print "High-resolution 3D MD trajectory complete: gamma_dot = ${SHEAR_RATE}"

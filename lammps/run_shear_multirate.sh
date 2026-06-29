@@ -46,8 +46,8 @@ fi
 #   0.030    0.001      中快
 #   0.060    0.001      最快
 # ─────────────────────────────────────────────────────────────────────────
-RATES=(0.003  0.005  0.015  0.030  0.060)
-DTS=(  0.003  0.003  0.001  0.001  0.001)
+RATES=(0.005  0.015  0.030  0.060)
+DTS=(  0.003  0.001  0.001  0.001)
 
 echo "========================================================"
 echo "  多剪切率 SLLOD 批量模拟"
@@ -101,16 +101,14 @@ echo ""
 echo "下一步：运行 F_s(q,t) 分析"
 echo ""
 echo "python compute_fsqt.py \\"
-echo "    --dump  dump.shear_0.003.lammpstrj \\"
-echo "            dump.shear_0.005.lammpstrj \\"
+echo "    --dump  dump.shear_0.005.lammpstrj \\"
 echo "            dump.shear_0.015.lammpstrj \\"
 echo "            dump.shear_0.030.lammpstrj \\"
 echo "            dump.shear_0.060.lammpstrj \\"
 echo "    --dump_fine \\"
-echo "            dump.fine_0.003.lammpstrj \\"
 echo "            dump.fine_0.005.lammpstrj \\"
 echo "            dump.fine_0.015.lammpstrj \\"
 echo "            dump.fine_0.030.lammpstrj \\"
 echo "            dump.fine_0.060.lammpstrj \\"
-echo "    --rate 0.003 0.005 0.015 0.030 0.060 \\"
+echo "    --rate 0.005 0.015 0.030 0.060 \\"
 echo "    --n_skip 5 --multiplot"

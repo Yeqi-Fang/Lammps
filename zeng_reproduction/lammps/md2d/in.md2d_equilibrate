@@ -1,0 +1,77 @@
+# Zeng et al. JCP 163, 084512 (2025): 2D binary soft-disk equilibration.
+#
+# Required command-line variables:
+#   DATA_FILE TABLE_FILE OUT_DIR RUN_TAG
+#   DT TEMP_INIT TEMP TDAMP SEED
+#   HOT_STEPS COOL_STEPS EQ_STEPS THERMO_EVERY
+
+units          lj
+dimension      2
+atom_style     atomic
+boundary       p p p
+
+read_data      ${DATA_FILE}
+
+mass           1  2.0
+mass           2  1.0
+
+pair_style     table linear 5000
+pair_coeff     1 1 ${TABLE_FILE} BB
+pair_coeff     1 2 ${TABLE_FILE} BS
+pair_coeff     2 2 ${TABLE_FILE} SS
+
+neighbor       0.5 bin
+neigh_modify   every 1 delay 0 check yes
+
+timestep       ${DT}
+fix            keep2d all enforce2d
+
+compute        T2D all temp
+compute        P2D all pressure T2D
+thermo         ${THERMO_EVERY}
+thermo_style   custom step time c_T2D c_P2D pe ke etotal
+thermo_modify  temp T2D flush yes
+
+print "MD2D_EQUIL_START ${RUN_TAG}"
+print "DATA_FILE ${DATA_FILE}"
+print "TABLE_FILE ${TABLE_FILE}"
+print "DT ${DT} TEMP_INIT ${TEMP_INIT} TEMP ${TEMP} TDAMP ${TDAMP}"
+print "HOT_STEPS ${HOT_STEPS} COOL_STEPS ${COOL_STEPS} EQ_STEPS ${EQ_STEPS}"
+
+# The paper does not specify the initial preparation schedule. These stages are
+# implementation defaults used only to obtain a stable supercooled liquid state.
+minimize       0.0 1.0e-6 1000 10000
+
+velocity       all create ${TEMP_INIT} ${SEED} mom yes rot no dist gaussian
+velocity       all set NULL NULL 0.0
+
+variable       samp_time equal time
+variable       samp_temp equal c_T2D
+variable       samp_press equal c_P2D
+variable       samp_pe equal pe
+variable       samp_etotal equal etotal
+
+fix            eq_thermo all ave/time ${THERMO_EVERY} 1 ${THERMO_EVERY} &
+               v_samp_time v_samp_temp v_samp_press v_samp_pe v_samp_etotal &
+               file ${OUT_DIR}/${RUN_TAG}.thermo.dat &
+               title1 "# Zeng MD2D equilibration thermo" &
+               title2 "# time temp press pe etotal"
+
+fix            nvt_hot all nvt temp ${TEMP_INIT} ${TEMP_INIT} ${TDAMP}
+run            ${HOT_STEPS}
+unfix          nvt_hot
+
+fix            nvt_cool all nvt temp ${TEMP_INIT} ${TEMP} ${TDAMP}
+run            ${COOL_STEPS}
+unfix          nvt_cool
+
+fix            nvt_eq all nvt temp ${TEMP} ${TEMP} ${TDAMP}
+run            ${EQ_STEPS}
+unfix          nvt_eq
+
+unfix          eq_thermo
+
+write_restart  ${OUT_DIR}/${RUN_TAG}.restart
+write_data     ${OUT_DIR}/${RUN_TAG}.data
+
+print "MD2D_EQUIL_FINISHED ${RUN_TAG}"

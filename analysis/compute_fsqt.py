@@ -9,8 +9,12 @@ compute_fsqt.py  ——  Self Intermediate Scattering Function F_s(q,t)
 
     F_s(q, t) = (1/N) Σ_i  ⟨ exp( i q · δr̃_i(t₀, t) ) ⟩_{t₀}
 
-非仿射位移（SLLOD/LE 坐标系）：
-    δr̃_i(t₀, t)_x = [x_i(t₀+t) - x_i(t₀)] - γ̇·t·y_i(t₀)
+非仿射位移（Yamamoto-Onuki / steady shear）：
+    R_i(t) = r_i(t) - γ̇ ∫_0^t y_i(t') dt' e_x
+    δr̃_i(t₀, t) = R_i(t₀+t) - R_i(t₀)
+
+即：
+    δr̃_i(t₀, t)_x = [x_i(t₀+t) - x_i(t₀)] - γ̇ ∫_{t₀}^{t₀+t} y_i(t') dt'
     δr̃_i(t₀, t)_y =  y_i(t₀+t) - y_i(t₀)
     δr̃_i(t₀, t)_z =  z_i(t₀+t) - z_i(t₀)
 
@@ -81,6 +85,10 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, 'reconfigure'):
+        _stream.reconfigure(encoding='utf-8', errors='replace')
 
 warnings.filterwarnings('ignore', category=RuntimeWarning)
 
@@ -181,6 +189,12 @@ def parse_dump_frame(lines, col_map):
             frame['xu']   = _get('xu')  # 已 unwrap 时直接用
             frame['yu']   = _get('yu')
             frame['zu']   = _get('zu')
+
+            if frame['id'] is not None:
+                order = np.argsort(frame['id'])
+                for key in ('id', 'type', 'x', 'y', 'z', 'ix', 'iy', 'iz', 'xu', 'yu', 'zu'):
+                    if frame.get(key) is not None:
+                        frame[key] = frame[key][order]
 
             return frame, col_map
 
@@ -376,6 +390,18 @@ def compute_fsqt_from_dump(
         for f in frames
     ], axis=0)
 
+    if shear_rate != 0.0:
+        if verbose:
+            print("  applying Yamamoto-Onuki nonaffine coordinate: x -= gamma_dot * integral y(t) dt")
+        affine_x = np.zeros(n_big, dtype=np.float64)
+        prev_y = all_pos[0, :, 1].astype(np.float64, copy=False)
+        for fi in range(1, n_frames):
+            curr_y = all_pos[fi, :, 1].astype(np.float64, copy=False)
+            dt = float(t_phys[fi] - t_phys[fi - 1])
+            affine_x += shear_rate * dt * 0.5 * (prev_y + curr_y)
+            all_pos[fi, :, 0] -= affine_x
+            prev_y = curr_y
+
     if verbose:
         print(f"  开始计算 F_s(q,t)  模式={mode}  q 数={n_q}")
 
@@ -383,15 +409,10 @@ def compute_fsqt_from_dump(
 
     for lag in range(max_lag + 1):
         valid_ori = origins[origins + lag < n_frames]
-        t0s = all_pos[valid_ori]            # (n_ori, n_big, 3)
-        t1s = all_pos[valid_ori + lag]
-
-        # 非均匀时间：每个原点对应不同的 dt_phys
-        dt_phys_vec = t_phys[valid_ori + lag] - t_phys[valid_ori]  # (n_ori,)
-        # 广播：(n_ori,1) × (n_ori, n_big) → (n_ori, n_big)
-        dr_x = (t1s[..., 0] - t0s[..., 0]) - shear_rate * dt_phys_vec[:, None] * t0s[..., 1]
-        dr_y = t1s[..., 1] - t0s[..., 1]
-        dr_z = t1s[..., 2] - t0s[..., 2]
+        drs = all_pos[valid_ori + lag] - all_pos[valid_ori]
+        dr_x = drs[..., 0]
+        dr_y = drs[..., 1]
+        dr_z = drs[..., 2]
 
         if mode == 'isotropic':
             dr  = np.sqrt(dr_x**2 + dr_y**2 + dr_z**2)
@@ -428,21 +449,20 @@ def compute_fsqt_from_dump(
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 从 r_tilde npz 计算（快速路径，仅供参考）
+# 从 r_tilde npz 计算
 # ══════════════════════════════════════════════════════════════════════════════
 
 def compute_fsqt_from_rtilde(npz_file, q_vals, shear_rate,
                               particle_type=TYPE_BIG,
-                              n_origins=50, verbose=True):
+                              n_skip=1, max_lag=None,
+                              mode='isotropic',
+                              n_origins=None, verbose=True):
     """
     从 msd_data.npz 中的 r_tilde（非仿射位移轨迹）计算 F_s(q,t)。
 
-    注意：r_tilde[t, i, :] 是粒子 i 在 t 时刻相对于 t₀=0 的非仿射位移。
-    因此直接用于 F_s，但只能有效利用 t₀=0 这一个原点（无法多原点平均）。
-    若需要多时间原点，请使用 dump 文件路径。
-
-    r_tilde[t2, i] - r_tilde[t1, i] 是从 t1 到 t2 的非仿射位移，但
-    这里的 "非仿射" 参考 y(0) 而不是 y(t1)，所以对 t1 >> 0 有系统误差。
+    r_tilde[t, i, :] 是全局 Yamamoto-Onuki 非仿射坐标。
+    因此 r_tilde[t2, i] - r_tilde[t1, i] 就是 t1 到 t2 的
+    非仿射位移，可以做多时间原点平均。
     """
     data      = np.load(npz_file, allow_pickle=True)
     r_tilde   = data['r_tilde']           # (n_frames, n_particles, 3)
@@ -458,27 +478,58 @@ def compute_fsqt_from_rtilde(npz_file, q_vals, shear_rate,
     q_vals    = np.asarray(q_vals)
     n_q       = len(q_vals)
     n_frames  = r_tilde.shape[0]
-    max_lag   = n_frames - 1
+    if max_lag is None:
+        max_lag = n_frames // 2
+    max_lag = min(int(max_lag), n_frames - 1)
 
-    Fsqt_sum  = np.zeros((n_q, n_frames))
-    count_arr = np.zeros(n_frames, dtype=int)
+    if n_origins is None:
+        origin_indices = np.arange(0, n_frames - max_lag, n_skip, dtype=int)
+    else:
+        n_valid_origins = max(1, n_frames - max_lag)
+        origin_indices = np.linspace(
+            0, n_valid_origins - 1, min(int(n_origins), n_valid_origins), dtype=int
+        )
+        origin_indices = np.unique(origin_indices)
+    if len(origin_indices) == 0:
+        origin_indices = np.array([0], dtype=int)
 
-    # 采样 n_origins 个时间原点
-    origin_indices = np.linspace(0, n_frames - 2, min(n_origins, n_frames//2),
-                                  dtype=int)
+    if verbose:
+        print(f"  time origins: {len(origin_indices)}  max_lag: {max_lag} frames  mode={mode}")
+
+    Fsqt_sum  = np.zeros((n_q, max_lag + 1))
+    count_arr = np.zeros(max_lag + 1, dtype=int)
 
     for t0_idx in origin_indices:
         r0 = r_tilde[t0_idx, big_mask, :]   # (n_big, 3)
 
-        for lag in range(0, n_frames - t0_idx):
+        for lag in range(0, max_lag + 1):
             t1_idx = t0_idx + lag
+            if t1_idx >= n_frames:
+                break
             r1 = r_tilde[t1_idx, big_mask, :]
+            dr = r1 - r0
 
-        dr      = r1 - r0                          # (n_big, 3)
-        dr_norm = np.sqrt((dr**2).sum(axis=1))     # (n_big,)
-        for qi, q in enumerate(q_vals):
-            qr = q * dr_norm
-            Fsqt_sum[qi, lag] += np.where(qr < 1e-10, 1.0, np.sin(qr) / qr).mean()
+            if mode == 'isotropic':
+                dr_norm = np.sqrt((dr**2).sum(axis=1))
+                for qi, q in enumerate(q_vals):
+                    qr = q * dr_norm
+                    Fsqt_sum[qi, lag] += np.where(qr < 1e-10, 1.0, np.sin(qr) / qr).mean()
+            elif mode == 'x':
+                for qi, q in enumerate(q_vals):
+                    Fsqt_sum[qi, lag] += np.cos(q * dr[:, 0]).mean()
+            elif mode == 'y':
+                for qi, q in enumerate(q_vals):
+                    Fsqt_sum[qi, lag] += np.cos(q * dr[:, 1]).mean()
+            elif mode == 'z':
+                for qi, q in enumerate(q_vals):
+                    Fsqt_sum[qi, lag] += np.cos(q * dr[:, 2]).mean()
+            elif mode == 'xy':
+                from scipy.special import j0
+                dr_xy = np.sqrt(dr[:, 0]**2 + dr[:, 1]**2)
+                for qi, q in enumerate(q_vals):
+                    Fsqt_sum[qi, lag] += j0(q * dr_xy).mean()
+            else:
+                raise ValueError(f"unknown mode: {mode}")
 
             count_arr[lag] += 1
 
@@ -491,9 +542,9 @@ def compute_fsqt_from_rtilde(npz_file, q_vals, shear_rate,
         # 把时间轴从绝对时间转换为延迟时间
         dt = np.diff(times)
         dt_frame = float(np.median(dt))
-        t_arr = np.arange(n_frames) * dt_frame
+        t_arr = np.arange(max_lag + 1) * dt_frame
     else:
-        t_arr = np.linspace(0, n_frames - 1, n_frames)
+        t_arr = np.linspace(0, max_lag, max_lag + 1)
 
     return t_arr, Fsqt
 
@@ -746,6 +797,10 @@ if __name__ == '__main__':
                    help='时间原点采样间隔（帧数）。n_skip>1 可加速')
     p.add_argument('--max_lag', type=int, default=None,
                    help='最大延迟帧数。默认=全部帧数的一半')
+    p.add_argument('--dt_frame', type=float, default=None,
+                   help='Physical time interval between neighboring dump frames; overrides default 0.02/gamma_dot for plain dump input')
+    p.add_argument('--max_frames', type=int, default=None,
+                   help='Maximum number of frames to read from each --dump file')
     p.add_argument('--mode',    default='isotropic',
                    choices=['isotropic', 'x', 'y', 'z', 'xy'],
                    help='q 方向模式')
@@ -808,7 +863,7 @@ if __name__ == '__main__':
 
             print(f"\n[处理] γ̇={sr}  dump={dump_file}")
 
-            frames_coarse = read_dump_lazy(dump_file)
+            frames_coarse = read_dump_lazy(dump_file, max_frames=args.max_frames)
             if len(frames_coarse) == 0:
                 print("  ✗ dump 为空"); continue
 
@@ -864,11 +919,16 @@ if __name__ == '__main__':
                 mask_c   = t_coarse > t_cutoff
                 t_arr  = np.concatenate([t_fine,          t_coarse[mask_c]])
                 Fsqt   = np.concatenate([Fs_fine,         Fs_coarse[:, mask_c]], axis=1)
+                frames_t_phys = t_phys_coarse
                 frames = frames_coarse  # 仅用于 directional 的 fallback
 
             else:
                 # 仅 coarse
-                t_phys    = None
+                if args.dt_frame is not None:
+                    t_phys = np.arange(len(frames_coarse)) * args.dt_frame
+                    print(f"  [time] using --dt_frame={args.dt_frame:g} tau0/frame")
+                else:
+                    t_phys = None
                 max_lag   = args.max_lag or len(frames_coarse) // 2
                 t_arr, Fsqt = compute_fsqt_from_dump(
                     frames_coarse, q_vals, sr,
@@ -876,10 +936,11 @@ if __name__ == '__main__':
                     n_skip=args.n_skip,
                     max_lag=max_lag,
                     mode=args.mode,
-                    t_phys=None,
+                    t_phys=t_phys,
                     verbose=True
                 )
                 frames = frames_coarse
+                frames_t_phys = t_phys
 
             # 自动设 max_lag
             if not args.no_save:
@@ -901,7 +962,7 @@ if __name__ == '__main__':
                         n_skip=args.n_skip,
                         max_lag=max_lag_d,
                         mode=mode_d,
-                        t_phys=None,
+                        t_phys=frames_t_phys,
                         verbose=False
                     )
                     t_dict[mode_d]  = td
@@ -926,14 +987,16 @@ if __name__ == '__main__':
         t_arr, Fsqt = compute_fsqt_from_rtilde(
             args.npz, q_vals, sr,
             particle_type=args.type,
-            n_origins=100,
+            n_skip=args.n_skip,
+            max_lag=args.max_lag,
+            mode=args.mode,
             verbose=True
         )
 
         if not args.no_save:
-            save_results(t_arr, Fsqt, q_vals, sr, 'isotropic', args.output)
+            save_results(t_arr, Fsqt, q_vals, sr, args.mode, args.output)
 
-        plot_fsqt_single(t_arr, Fsqt, q_vals, sr, args.output, mode='isotropic')
+        plot_fsqt_single(t_arr, Fsqt, q_vals, sr, args.output, mode=args.mode)
 
     else:
         print("错误：请提供 --dump 或 --npz")

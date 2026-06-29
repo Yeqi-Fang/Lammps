@@ -32,3 +32,16 @@ python compute_fsqt.py ^
     --rate 0.003 0.005 0.015 0.030 0.060 ^
     --n_skip 5
 
+python compute_msd_nonaffine.py ^
+    --dump     ../lammps/dump.equil_coars.lammpstrj ^
+    --rate     0.0 ^
+    --dt       0.005 ^
+    --dt_frame 5.0 ^
+    --save_npz msd_data_equil.npz ^
+    --output   figures
+
+python compute_msd_nonaffine.py ^
+    --dump ../lammps/dump.fine_0.003.lammpstrj ^
+    --rate 0.003 --dt 0.003 ^
+    --save_npz msd_data_0p003.npz ^
+    --output figures

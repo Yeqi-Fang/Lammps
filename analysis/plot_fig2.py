@@ -248,7 +248,7 @@ def plot_fig2(args):
         if len(frms) >= 2:
             dts = frms[1]['timestep'] - frms[0]['timestep']
         else:
-            dts = round(0.5 / (sr * 0.005))
+            dts = round(0.02 / (sr * args.dt))
     else:
         print("  ⚠ 无法获取盒子，使用跳跃数据范围估计")
 
@@ -545,12 +545,14 @@ if __name__ == '__main__':
     p.add_argument('--dump',   default='dump.shear_0.015.lammpstrj')
     p.add_argument('--npz',    default='cage_jumps_shearrate_0p015.npz')
     p.add_argument('--rate',   type=float, default=0.015)
-    p.add_argument('--dt',     type=float, default=0.005,
+    p.add_argument('--dt',     type=float, default=0.001,
                    help='LAMMPS 时间步长 Δt')
-    p.add_argument('--every',  type=int,   default=6667,
+    p.add_argument('--every',  type=int,   default=None,
                    help='dump 每隔多少步写一帧')
     p.add_argument('--output', default='figures')
     args = p.parse_args()
+    if args.every is None:
+        args.every = round(0.02 / (args.rate * args.dt))
 
     print(f"\n{'='*55}")
     print("  Fig. 2  团簇时间演化")

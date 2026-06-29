@@ -20,7 +20,15 @@
 
 DATA_DIR="${1:-.}"
 SHEAR_RATE="${2:-0.015}"
-DT="${3:-0.005}"
+if [ $# -ge 3 ]; then
+    DT="$3"
+else
+    DT="$(python3 - <<PYEOF
+sr = float("${SHEAR_RATE}")
+print("0.003" if sr <= 0.005 + 1e-12 else "0.001")
+PYEOF
+)"
+fi
 
 # 脚本目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,12 +74,12 @@ echo ""
 echo "[步骤 2] 计算非仿射 MSD..."
 if [ -f "${DUMP_FILE}" ]; then
     # 计算帧间时间（dump_every * dt）
-    # dump_every = round(0.5 / (shear_rate * dt))
+    # dump_every = round(0.02 / (shear_rate * dt))
     python3 - <<PYEOF
 import subprocess, sys, os
 shear_rate = ${SHEAR_RATE}
 dt = ${DT}
-dump_every = round(0.5 / (shear_rate * dt))
+dump_every = round(0.02 / (shear_rate * dt))
 dt_frame = dump_every * dt
 print(f"  dump_every={dump_every} 步, dt_frame={dt_frame:.4f} τ₀")
 

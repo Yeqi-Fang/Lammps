@@ -1,0 +1,74 @@
+
+variable        gamma equal 0.0
+variable        cooltemp equal 0.45
+variable        seed equal 4511580
+
+units 		    lj
+dimension 	    3
+boundary 	    p p p
+atom_style 	    atomic
+
+lattice 	    fcc 1.2
+region 	        box block 0 13 0 13 0 13
+create_box 	    2 box
+create_atoms 	1 box 
+group           smaller_atoms id 1:19652:5
+set 		    group smaller_atoms type 2
+
+change_box 	    all triclinic
+
+mass            1 1.0
+mass            2 1.0
+
+neighbor 	    1.0 multi
+neigh_modify 	delay 0
+comm_modify 	mode multi
+
+pair_style 	    lj/cut 2.5
+pair_coeff 	    1 1 1.0 1.0 2.5
+pair_coeff 	    2 2 0.5 0.88 2.5
+pair_coeff 	    1 2 1.5 0.8 2.5
+pair_modify     shift yes
+
+# start heat###############
+
+velocity 	    all create 5.0 ${seed} dist gaussian rot yes
+
+timestep 	    0.001
+fix 		    motion all nve
+fix 		    start_heat all langevin 5.0 5.0 $(100.0*dt) ${seed} zero yes
+
+thermo 	        1000
+thermo_style 	custom step temp epair etotal press vol pxy
+
+run 		    50000
+
+unfix 		    start_heat
+unfix 		    motion
+
+reset_timestep  0
+
+###########################
+
+velocity        all zero linear
+velocity        all zero angular
+velocity 	    all scale 1.0
+
+timestep        0.005
+
+fix             pre_eq all nvt temp 1.0 1.0 $(100.0*dt)
+run             100000
+unfix           pre_eq
+
+fix 		    cool all nvt temp 1.0 ${cooltemp} $(100.0*dt)
+run             200000
+unfix           cool
+
+fix             eq all nvt temp ${cooltemp} ${cooltemp} $(100.0*dt)
+run             1000000
+
+write_restart	restart.equil
+
+# dump 		    1 all custom 10000 dump_shear_interval_10000_to_1000000.colloid id type x y z
+
+# run           1000000

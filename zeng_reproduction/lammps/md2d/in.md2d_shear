@@ -1,0 +1,77 @@
+# Zeng et al. JCP 163, 084512 (2025): 2D binary soft-disk SLLOD shear.
+#
+# Required command-line variables:
+#   RESTART_FILE TABLE_FILE OUT_DIR RUN_TAG
+#   SHEAR_RATE DT TEMP TDAMP PRE_STRAIN PROD_STRAIN
+#   DUMP_EVERY THERMO_EVERY VISC_EVERY
+
+units          lj
+dimension      2
+atom_style     atomic
+boundary       p p p
+
+read_restart   ${RESTART_FILE}
+
+pair_style     table linear 5000
+pair_coeff     1 1 ${TABLE_FILE} BB
+pair_coeff     1 2 ${TABLE_FILE} BS
+pair_coeff     2 2 ${TABLE_FILE} SS
+
+neighbor       0.5 bin
+neigh_modify   every 1 delay 0 check yes
+
+change_box     all triclinic
+timestep       ${DT}
+fix            keep2d all enforce2d
+
+compute        Tdeform all temp/deform
+compute        Pdeform all pressure Tdeform
+thermo_modify  temp Tdeform flush yes
+thermo         ${THERMO_EVERY}
+thermo_style   custom step time c_Tdeform c_Pdeform c_Pdeform[4] pe ke etotal lx ly xy
+
+variable       N_pre equal ceil(${PRE_STRAIN}/(${SHEAR_RATE}*${DT}))
+variable       N_prod equal ceil(${PROD_STRAIN}/(${SHEAR_RATE}*${DT}))
+
+fix            shear_deform all deform 1 xy erate ${SHEAR_RATE} remap v flip yes
+fix            sllod_nvt all nvt/sllod temp ${TEMP} ${TEMP} ${TDAMP}
+
+print "MD2D_SHEAR_PRE_START ${RUN_TAG}"
+print "SHEAR_RATE ${SHEAR_RATE} DT ${DT} TEMP ${TEMP} TDAMP ${TDAMP}"
+print "PRE_STRAIN ${PRE_STRAIN} N_pre ${N_pre}"
+run            ${N_pre}
+
+reset_timestep 0
+
+variable       samp_time equal time
+variable       samp_gamma equal ${SHEAR_RATE}*time
+variable       samp_temp equal c_Tdeform
+variable       samp_press equal c_Pdeform
+variable       samp_pxy equal c_Pdeform[4]
+variable       samp_npxy equal -c_Pdeform[4]
+variable       samp_eta equal -c_Pdeform[4]/${SHEAR_RATE}
+
+fix            file_thermo all ave/time ${THERMO_EVERY} 1 ${THERMO_EVERY} &
+               v_samp_time v_samp_gamma v_samp_temp v_samp_press v_samp_pxy v_samp_eta &
+               file ${OUT_DIR}/${RUN_TAG}.thermo.dat &
+               title1 "# Zeng MD2D SLLOD thermo" &
+               title2 "# time gamma temp press pxy eta_inst"
+
+fix            file_visc all ave/time 1 ${VISC_EVERY} ${VISC_EVERY} &
+               v_samp_time v_samp_gamma v_samp_npxy v_samp_eta &
+               file ${OUT_DIR}/${RUN_TAG}.visc_block.dat &
+               title1 "# Block-averaged -Pxy and eta=-Pxy/gdot" &
+               title2 "# time gamma minus_pxy eta"
+
+dump           atom_traj all custom/gz ${DUMP_EVERY} &
+               ${OUT_DIR}/${RUN_TAG}.lammpstrj.gz &
+               id type x y ix iy xu yu
+dump_modify    atom_traj sort id
+
+print "MD2D_SHEAR_PROD_START ${RUN_TAG}"
+print "PROD_STRAIN ${PROD_STRAIN} N_prod ${N_prod} DUMP_EVERY ${DUMP_EVERY}"
+run            ${N_prod}
+
+write_restart  ${OUT_DIR}/${RUN_TAG}.restart
+
+print "MD2D_SHEAR_FINISHED ${RUN_TAG}"

@@ -1,0 +1,54 @@
+{
+  "output_dir": "zeng_reproduction/data/MD/figures",
+  "require_exact_stress": true,
+  "panels": [
+    {
+      "name": "md3d_ka_gdot0p015",
+      "system": "MD3D",
+      "shear_rate": 0.015,
+      "trajectory_npz": "zeng_reproduction/data/MD/3D/raw/md3d_gdot0p015_trajectory.npz",
+      "jumps_npz": "zeng_reproduction/data/MD/3D/processed/md3d_gdot0p015_cage_jumps.npz",
+      "output_dir": "zeng_reproduction/data/MD/3D/figures",
+      "analysis_delta_t": 0.1,
+      "gr_first_min": null,
+      "grid_shape": [30, 30, 30],
+      "cluster_id": null,
+      "window_start_time": null,
+      "window_end_time": null,
+      "t_chi": null,
+      "reference_time": null,
+      "characteristic_times": {
+        "t_prime": null,
+        "t0": null,
+        "t1": null,
+        "t2": null,
+        "t3": null
+      },
+      "ice_replicates_required": 50
+    },
+    {
+      "name": "md2d_gdot0p001",
+      "system": "MD2D",
+      "shear_rate": 0.001,
+      "trajectory_npz": "zeng_reproduction/data/MD/2D/raw/md2d_gdot0p001_trajectory.npz",
+      "jumps_npz": "zeng_reproduction/data/MD/2D/processed/md2d_gdot0p001_cage_jumps.npz",
+      "output_dir": "zeng_reproduction/data/MD/2D/figures",
+      "analysis_delta_t": 0.5,
+      "gr_first_min": null,
+      "grid_shape": [80, 80],
+      "cluster_id": null,
+      "window_start_time": null,
+      "window_end_time": null,
+      "t_chi": null,
+      "reference_time": null,
+      "characteristic_times": {
+        "t_prime": null,
+        "t0": null,
+        "t1": null,
+        "t2": null,
+        "t3": null
+      },
+      "ice_replicates_required": 50
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "bd_phi45_gdot3",
+  "system": "BD",
+  "shear_rate": 3.0,
+  "phi": 0.45,
+  "trajectory_npz": "zeng_reproduction/data/BD/raw/bd_phi45_gdot3_trajectory.npz",
+  "jumps_npz": "zeng_reproduction/data/BD/processed/bd_phi45_gdot3_cage_jumps.npz",
+  "output_dir": "zeng_reproduction/data/BD/figures",
+  "analysis_delta_t": 0.005,
+  "require_exact_stress": true,
+  "type_filter": 1,
+  "grid_shape": [30, 30, 30],
+  "cluster_id": null,
+  "window_start_time": null,
+  "window_end_time": null,
+  "t_chi": null,
+  "reference_time": null,
+  "characteristic_times": {
+    "t_prime": null,
+    "t0": null,
+    "t1": null,
+    "t2": null,
+    "t3": null
+  }
+}

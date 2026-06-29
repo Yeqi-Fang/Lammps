@@ -1,0 +1,271 @@
+                                                                                                                   week ending
+PRL 105, 135702 (2010)                   PHYSICAL REVIEW LETTERS                                               24 SEPTEMBER 2010
+
+
+
+            Spatiotemporal Hierarchy of Relaxation Events, Dynamical Heterogeneities,
+                     and Structural Reorganization in a Supercooled Liquid
+ R. Candelier,1 A. Widmer-Cooper,2 J. K. Kummerfeld,3 O. Dauchot,1 G. Biroli,4 P. Harrowell,3 and D. R. Reichman5
+                               1
+                                   SPEC, CEA-Saclay, URA 2464 CNRS, 91 191 Gif-sur-Yvette, France
+            2
+                Materials Sciences Division, Lawrence Berkeley National Laboratory, Berkeley, California, 94720, USA
+                       3
+                         Department of Chemistry, University of Sydney, Sydney, New South Wales 2006, Australia
+                 4
+                   Institut de Physique Théorique, CEA, IPhT, F-91191 Gif-sur-Yvette, France and CNRS, URA 2306
+                                5
+                                  Columbia University, 3000 Broadway, New York, New York, 10027, USA
+                                      (Received 30 November 2009; published 24 September 2010)
+                We identify the pattern of microscopic dynamical relaxation for a two-dimensional glass-forming
+             liquid. On short time scales, bursts of irreversible particle motion, called cage jumps, aggregate into
+             clusters. On larger time scales, clusters aggregate both spatially and temporally into avalanches. This
+             propagation of mobility takes place along the soft regions of the systems, which have been identified by
+             computing isoconfigurational Debye-Waller maps. Our results characterize the way in which dynamical
+             heterogeneity evolves in moderately supercooled liquids and reveal that it is astonishingly similar to the
+             one found for dense glassy granular media.
+
+             DOI: 10.1103/PhysRevLett.105.135702                                      PACS numbers: 64.70.pm, 61.43.Fs
+
+
+   Identifying the mechanisms responsible for the slowing           organized in an hierarchy essentially identical to that found
+down of the dynamics of supercooled liquids is still an             in granular systems.
+open problem despite decades of research. While tradi-                 Understanding how the spatial distribution of kinetics
+tional descriptions of glassy systems have mainly focused           arises from the structure of the underlying particle con-
+on energy landscape concepts [1] and spatially averaged             figurations represents a central challenge for any complete
+quantities, recent work has centered on the real-space              discussion of a glass transition. We therefore also inves-
+properties reflected in the heterogeneous dynamics shown            tigate how this hierarchy of length and time scales is ex-
+by nearly all glass-forming materials. Concomitantly, in-           pressed in the configurational structure. Using the
+vestigations of the behavior of dense driven granular media         isoconfigurational ensemble and the local Debye-Waller
+have uncovered tantalizing similarities with the dynamics           (DW) factor, correlations between structure and dynamic
+of supercooled liquids [2–5] and provided new inspirations          heterogeneities have been established [13,14]. Here we
+for research on the glass transition. One notable finding           show mechanistically and in detail how clusters and ava-
+from the granular studies is that dynamic heterogeneities           lanches develop on soft regions of the structure and, in-
+are organized into a hierarchy of structures, each of them          versely, how these relaxation events change the spatial
+characterized by its length and time scales [6,7]. Cage             distribution of the soft regions.
+escapes by individual particles occur in clusters which, in            We shall address these questions by performing molecu-
+turn, are organized into larger collections that were called        lar dynamics simulations on a new two-dimensional model
+‘‘avalanches,’’ referring to large collective events com-           of glass-forming liquid and applying the cluster analysis
+posed sequentially by smaller ones.                                 developed in [6]. We focus on a 2D nonadditive binary
+   An important question is whether this hierarchy of dy-           mixture of N ¼ 5760 particles enclosed in a square box
+namic heterogeneities is present in thermally equilibrated          with periodic boundary conditions, interacting via purely
+supercooled liquids or, instead, it is a peculiarity of athe-       repulsive potentials of the form uab ðrÞ ¼ "ðab =rÞ12 . The
+rmal dissipative systems. Evidence of organized motion in           mole fraction of the smaller particles is set to x1 ¼ 0:3167.
+liquids has already been reported [8–12]: on relatively fast        All units are reduced so that 11 ¼ " ¼ m ¼ 1:0, m being
+time scales, the complex sequence of particle motions               the mass of both types of particle. The nonadditivity po-
+results in stringlike clusters of displacements, see, e.g.,         tential, namely, 12 ¼ 1:111 and 22 ¼ 1:411 , hinders
+[10]; on time scales on which relaxation takes place,               the formation of crystalline microdomains; see [15] for
+particle motion is organized in compact clusters [11].              more details. Molecular dynamics simulations were carried
+While these studies are encouraging, neither the extended           out at constant NVT (T ¼ 0:4) using the Nose-Poincaré
+spatial hierarchy of particle escape within clusters and            Hamiltonian [16] after equilibration at constant NPT as
+avalanches nor how the dynamical correlations form start-           described in [14]. All time units are scaled in such a way
+ing from microscopic time scales out to the structural              that the structural relaxation time  , defined as the time
+relaxation time have been explored. In this Letter we               required for the self-intermediate scattering function to
+identify these mechanisms and demonstrate that the dy-              decay to 1=2, equals 103 . The typical collision time is
+namic heterogeneities of a supercooled liquid are, in fact,         0.12 in these units.
+
+0031-9007=10=105(13)=135702(4)                              135702-1                    Ó 2010 The American Physical Society
+                                                                                                                   week ending
+PRL 105, 135702 (2010)                 PHYSICAL REVIEW LETTERS                                                 24 SEPTEMBER 2010
+
+   To compare the dynamic heterogeneities of the simu-
+lated liquid and granular system we quantify the local
+relaxation of a particle p by
+                                                
+                              kr~p ðt; t þ Þk2
+          Qp;t ða; Þ ¼ exp                      ;       (1)
+                                     2a2
+where ~rp ðt; t þ Þ is the displacement of the particle p
+between t and t þ  and a is the length scale over which
+the motion is probed. A global measure of the relaxa-
+tion is thenP provided by the correlation function,
+Qt ða; Þ ¼ N1 p Qp;t ða; Þ, and its fluctuations 4 ða; Þ ¼
+N Var½Qt ða; Þ. We focus on the values a ¼ 0:29 and
+ ¼ 1078 leading to maximal dynamic heterogeneity,
+i.e., highest value of 4 ða; Þ (see [17] for details). Note
+that  is very close to the relaxation time  ¼ 1000.
+   To define cage jumps, we follow the same procedure as
+in [6]. Briefly, the trajectory of each particle is divided in
+two at a time tc , tc being chosen such that the centers of
+mass of the subtrajectories on either side of tc are best
+separated. tc is designated a cage escape, and the process is
+repeated iteratively for each of the subtrajectories until the   FIG. 1 (color online). Cage jump spatiotemporal organization.
+maximal separation drops below a threshold distance stem-        Top left: Comparison between the relative averaged relaxation
+                                                                 Qt ða ;  Þ=hQt it [gray (cyan)] and the relative percentage
+ming from the dynamics itself. This allows one to separate
+                                                                 Pt ð Þ=hPt it of particles that have not jumped between t0 and
+the dynamics into periods of inefficient vibrational motion      t0 þ  (black). Inset: Trajectory of a single particle over 14 .
+separated by relaxation events also called cage jumps (see       Color changes when the particle jumps. Top right: (inner
+inset of the top-left panel of Fig. 1). Note that a particle     top) Map of Qt0 ð Þ; (inner bottom) particles having jumped
+undergoing a cage jump does not necessarily change neigh-        during the same lag  ; jumping time is color-coded. Bottom
+bors, since the typical jump distance is well below the          left: Cumulative probability distribution function of the lag
+particle size. The relative percentage of particles that         between adjacent clusters 1 (thick green curve), compared to
+have not jumped matches perfectly the temporal evolution         the corresponding curve for a random distribution of clusters
+of the dynamical relaxation (Fig. 1, top left) and the           (black). Inset: PDF of 1 (circles). The exponential distribution
+location of the cage jumps coincides with the areas of           with same mean is shown for comparison (solid line), as well as
+maximal decorrelation (Fig. 1, top right).                       exponentials of typical time scale S and L (dotted lines).
+   Figure 1 (top right) already suggests some level of           Bottom right: Spatiotemporal view of the cage jumps in a
+                                                                 specific region of space, projected on the x axis. The cluster
+spatiotemporal organization of the cage jumps. This can
+                                                                 size is color-coded. Note the aggregation of clusters in ava-
+be further quantified following the analysis performed for       lanches. The typical time scales of the dynamics are shown.
+the two-dimensional granular media [6]. The outcome is
+remarkably similar (Fig. 1, bottom right): First, cage jumps
+aggregate into clusters, which are formed by cage jumps          those of the granular system investigated previously. We
+adjacent in space (as measured by the neighboring parti-         also report the value of the dynamical correlation length
+cles) and time (separated by less than th ¼ 28, which is        4 , obtained from the spatial range of the dynamical cor-
+twice the precision of the cage detection algorithm). The        relator G4 computed at  ; see, e.g., [18]. The dynamics are
+size of these clusters is broadly distributed with an average    strikingly similar. One difference we find is that the aver-
+value of 7.6 cage jumps per cluster. Second, clusters ag-        age distance between avalanches is somewhat smaller in
+gregate into avalanches. The probability distribution func-      the liquid case than in the granular one: 10 as compared
+tion (PDF) of the lag times 1 separating each cluster from      to 27. More evidence, as well as details on the procedure
+the nearest adjacent one, normalized by its average value        for identifying cage jumps and analyzing them, are re-
+h1 i, is compared to the equivalent distributions for ran-      ported in the supplementary material [19].
+domly distributed clusters in space and time (Fig. 1, bottom
+left). There is a clear excess of both small and large lags:
+                                                                 TABLE I. Comparison of length and time scales normalized so
+the PDF is very well fitted by the superposition of two
+                                                                 that  ¼ 1000. See definitions in the text.
+Poissonian processes with two different time scales S ¼
+240 and L ¼ 1746. The short time scale corresponds to                                     a     4                S      L
+the existence of a correlation among adjacent clusters. The      Supercooled liquid       0.29    2.9   1000    1078    240   1746
+large one is related to the average time spent in a cage.        Dense granular media     0.12    3.1   1000     915    155   1384
+Table I compares the actual values of these parameters to
+                                                           135702-2
+                                                                                                                        week ending
+PRL 105, 135702 (2010)                      PHYSICAL REVIEW LETTERS                                                 24 SEPTEMBER 2010
+
+    Altogether, this first part of our study clearly demon-
+strates that the nature of dynamic heterogeneity in super-
+cooled and granular systems is largely the same, a
+nontrivial result given the difference between an equili-
+brated thermal liquid and a nonequilibrium steady state of
+vibrated grains. Recent results [7] obtained by changing
+the density of the granular sample suggest that our model
+of a supercooled liquid would compare with a granular
+system characterized by a slightly smaller density than the
+one studied here. Obviously the next step is to perform a
+careful study of the temperature dependence, which will
+require significant further supercooling.
+    The existence of avalanches is consistent with a scenario
+in which the first cluster triggers the appearance of succes-
+sive clusters nearby shortly after. This is reminiscent of the
+facilitation picture inspired from facilitated kinetic Ising
+models, for which mobility diffuses as a locally conserved
+quantity [20,21]. However, in a real system, there should
+always be a probability to create or annihilate a facilitated
+chain of motion and facilitation is not fully conserved. This
+is precisely what we see when avalanches start or end. As
+                                                                        FIG. 2 (color online). Top: Cage jumps occurring between t
+compared to other studies of supercooled liquids, we be-                and t þ S for two different isoconfigurational trajectories, on
+lieve that the democratic clusters [10] correspond with the             top of a DW factor map computed at time t. Bottom left: Cage
+avalanches.                                                             jumps occurring in 6 isoconfigurational trajectories between t
+    We shall now address how (if at all) this organization of           and t þ S tile the high DW regions. Color bar indicates the DW
+dynamics is reflected in the structure of the relevant con-             values in levels of gray. Bottom right: Average hðDWÞJ i over the
+figuration. Here we will identify the location of ‘‘soft’’              particles having jumped between t and t þ , divided by the
+regions by using the isoconfigurational DW factor                       average hDWi over all particles, as a function of the lag time .
+[14,22]. Starting from the system configuration at time t,              Inset: PDF of ðDWÞJ for the particles jumping in ½t; t þ  for
+                                                                        several values of . The black curve is the PDF for all particles.
+one computes the local DW factor for particle i: ðDWÞi ¼
+h½~ri ðtÞ  hr~i it 2 it;C , where the average is over the isocon-
+figuration ensemble as well as over a short time interval t            real-space geometric structure encoded in the soft regions.
+which in this work is taken to be 25. Starting from the same            Remarkably, merging all cage jumps that occur in the
+equilibrated configuration, we have run 6 isotrajectories               interval of time S in the 6 isoconfigurational trajectories
+and have obtained the cage jumps for all of them.                       covers nearly all the high DW areas, as shown in Fig. 2
+    All of the cage jumps occurring in the interval of time             (bottom left). Our conclusion is that the spatial distribution
+½t; t þ S  fall on top of high DW areas; see Fig. 2, top.             of soft regions encoded in the initial configuration provides
+However, when and where the clusters exactly appear is a                a better predictor of the avalanche than for its constitutive
+stochastic event. Note that S  25, so that the correlation            clusters. This result is consistent with the previous con-
+between the DW map at time t (a nearly instantaneous                    clusion of Berthier and Jack [23], who found that structural
+structural quantity) and the dynamics taking place at longer            properties are better predictors of dynamics on large as
+times are nontrivial. The correlation between DWs and                   opposed to short length scales.
+cage jumps can be made more quantitative. We compute                       We finally consider an issue never addressed before,
+the DW at time t averaged only over particles that jump                 namely, how the dynamics causes the soft regions of the
+between t and t þ  (DWJ ) as a function of the lag time .             structure to evolve. We find that decorrelation is a dis-
+This quantity, normalized with respect to hDWðtÞit for all              tinctly nonlocal process. More precisely, a cage jump at
+particles, is shown in Fig. 2 (bottom right). At short times            time t correlates with changes of the DWs that happen
+the average ðDWÞJ for the jumping particles is substan-                 shortly after and extend quite far away. This is visually
+tially higher than the DW averaged over all particles. This             apparent in Fig. 3 (left) and demonstrated quantitatively by
+correlation disappears for larger times comparable to times             considering jDWðtÞ  DWðt þ Þj averaged over all par-
+over which the DW maps decorrelate, which is of the order               ticles, that are in a disk of radius r from a cage jump taking
+of  =3.                                                               place at time t and subtract from that quantity its r ¼ 1
+    If we consider now the sequence of multiple clusters, as            value. Figure 3 (right) shows this quantity, called J ðrÞ, for
+shown in the two top panels of Fig. 2, we find strong                    ¼ 17. J ðrÞ is rather long ranged, in particular, much
+evidence that a significant part of the avalanche structure,            more than the cage jump correlation function J ðrÞ; see
+not just the initial cluster in an avalanche, lies on top of the        Fig. 3 (right) and its caption for a precise definition of
+                                                                 135702-3
+                                                                                                                  week ending
+PRL 105, 135702 (2010)                   PHYSICAL REVIEW LETTERS                                              24 SEPTEMBER 2010
+
+                                                                    of us [7] have performed such an analysis for granular
+                                                                    media and found that facilitation becomes less conserved
+                                                                    as the density is increased. A similar analysis for our model
+                                                                    of supercooled liquids is in progress.
+                                                                       We would like to thank J.-P. Bouchaud and L. Berthier
+                                                                    for fruitful discussions. G. B., R. C., and O. D. were par-
+                                                                    tially supported by ANR DYNHET 07-BLAN-0157-01.
+                                                                    D. R. R. would like to thank the National Science
+                                                                    Foundation for financial support. P. H. is supported through
+                                                                    the Discovery program of the Australian Research Council.
+                                                                    A. W. thanks the School of Chemistry at the University of
+FIG. 3 (color online). Left: Cage jumps occurring in  ¼ 17
+                                                                    Sydney for computer time on the Silica cluster.
+on top of a map of the relative difference ðDWðt þ Þ 
+DWðtÞÞ=hDWi. Right: Normalized J ðrÞ ¼ hjðDWÞi jiJr 
+hjðDWÞi jiJ1 (blue circles) where hjðDWÞi jiJr is the absolute
+difference of DW over  ¼ 17 averaged over the particles in the
+                                                                     [1] M. Goldstein, J. Chem. Phys. 51, 3728 (1969).
+disk of radius r around a given cage jump. The analogous
+                                                                     [2] G. Marty and O. Dauchot, Phys. Rev. Lett. 94, 015701
+quantity for the density of jumps J ðrÞ ¼ hi iJr  hi iJ1 (red
+                                                                         (2005).
+squares) where i is 1 if particle i jumps between t and t þ 
+                                                                     [3] A. R. Abate and D. J. Durian, Phys. Rev. E 74, 031308
+and 0 otherwise. Error bars: standard deviation.
+                                                                         (2006).
+                                                                     [4] C. S. O’Hern, S. A. Langer, A. J. Liu, and S. R. Nagel,
+J ðrÞ. What is mediating the nonlocal interaction between               Phys. Rev. Lett. 88, 075507 (2002).
+cage jumps and DWs is an intriguing question. One possi-             [5] A. Liu and S. Nagel, Nature (London) 396, 21 (1998).
+bility is that a slowly varying spatial field, like the thermal      [6] R. Candelier, O. Dauchot, and G. Biroli, Phys. Rev. Lett.
+strain discussed in [12], provides long-ranged dynamical                 102, 088001 (2009).
+interactions.                                                        [7] R. Candelier, O. Dauchot, and G. Biroli, arXiv:0912.0472.
+   In conclusion, we have established that the organization          [8] R. Yamamoto and A. Onuki, J. Phys. Soc. Jpn. 66, 2545
+of cage jumps into clusters and avalanches, observed origi-              (1997).
+nally in the driven granular system in [6,7], also character-        [9] C. Donati, S. C. Glotzer, P. H. Poole, W. Kob, and S. J.
+                                                                         Plimpton, Phys. Rev. E 60, 3107 (1999).
+izes the dynamic heterogeneities of a simulated
+                                                                    [10] Y. Gebremichael, M. Vogel, and S. C. Glotzer, J. Chem.
+supercooled liquid, at least away from deep supercooling.                Phys. 120, 4415 (2004).
+This demonstration of the existence of avalanches in super-         [11] G. A. Appignanesi, J. A. Rodriguez Fris, R. A. Montani,
+cooled liquids suggests that there is a hierarchy of lengths             and W. Kob, Phys. Rev. Lett. 96, 057801 (2006).
+related to the cooperative dynamics. The irrelevance of the         [12] A. Widmer-Cooper and P. Harrowell, Phys. Rev. E 80,
+very different types of particle dynamics in the two sys-                061501 (2009).
+tems possibly is a consequence of the dominant role played          [13] A. Widmer-Cooper, P. Harrowell, and H. Fynewever,
+by structure in the dynamics of these dense disordered                   Phys. Rev. Lett. 93, 135701 (2004).
+systems. The spatial extent of the avalanches is strongly           [14] A. Widmer-Cooper, H. Perry, P. Harrowell, and D. R.
+correlated with the extent of the spatial regions of large               Reichman, Nature Phys. 4, 711 (2008).
+local DW factors. This result raises the possibility that the       [15] A. Widmer-Cooper, Ph.D. thesis, University of Sydney,
+                                                                         2006.
+hierarchy of kinetic length, mentioned above, may have a
+                                                                    [16] S. D. Bond, B. J. Leimkuhler, and B. B. Laird, J. Comput.
+corresponding hierarchy in the inherent structures of glass-             Phys. 151, 114 (1999).
+forming liquids. The importance of the preexisting soft             [17] F. Lechenault, O. Dauchot, G. Biroli, and J. Bouchaud,
+modes in determining the structure of dynamic heteroge-                  Europhys. Lett. 83, 46 003 (2008).
+neities and the nonlocal influence on the evolution of the          [18] S. Glotzer, V. Novikov, and T. Schrøder, J. Chem. Phys.
+topography of hard and soft areas leaves us with a quite                 112, 509 (2000).
+different view from the one based on the propagation of a           [19] See supplementary material at http://link.aps.org/
+conserved mobility field.                                                supplemental/10.1103/PhysRevLett.105.135702 for de-
+   Studying the evolution of dynamical properties with                   tails.
+decreasing temperature following the same analysis would            [20] S. Butler and P. Harrowell, J. Chem. Phys. 95, 4454
+allow for direct tests of prominent theories of the glass                (1991).
+                                                                    [21] J. P. Garrahan and D. Chandler, Phys. Rev. Lett. 89,
+transition. In the picture based on kinetically constrained
+                                                                         035704 (2002).
+models of glasses [21], facilitation should become more             [22] A. Widmer-Cooper and P. Harrowell, Phys. Rev. Lett. 96,
+relevant and conserved upon lowering the temperature. In                 185701 (2006).
+the random first order transition theory [24], the dynamics         [23] L. Berthier and R. L. Jack, Phys. Rev. E 76, 041509
+should be correlated with soft regions for moderately                    (2007).
+supercooled liquids, but, closer to the glass transition, the       [24] T. R. Kirkpatrick, D. Thirumalai, and P. G. Wolynes, Phys.
+relaxation should be dominated by other processes. Three                 Rev. A 40, 1045 (1989).
+                                                              135702-4
+
