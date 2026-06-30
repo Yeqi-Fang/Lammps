@@ -1,5 +1,7 @@
 from pathlib import Path
+import gc
 import sys
+import tempfile
 
 import numpy as np
 
@@ -12,6 +14,8 @@ from md2d_chi4_cage_cluster import (  # noqa: E402
     box_dict,
     component_from_density,
     count_overlap_pairs,
+    ensure_particle_major_r_tilde,
+    expected_dump_stride,
     fold_to_triclinic_box,
     nonaffine_increment,
     periodic_labels,
@@ -98,3 +102,30 @@ def test_window_points_keeps_cosheared_positions_without_transport():
 def test_box_dict_uses_expected_order():
     box = box_dict(np.array([1.0, 2.0, 3.0, 4.0, 0.5]))
     assert box == {"xlo": 1.0, "ylo": 2.0, "lx": 3.0, "ly": 4.0, "xy": 0.5}
+
+
+def test_expected_dump_stride_requires_integer_multiple():
+    cfg = MD2DConfig(dump_dt=0.5, dt_lammps=0.005)
+    assert expected_dump_stride(cfg) == (100, 0.5)
+    bad = MD2DConfig(dump_dt=0.512, dt_lammps=0.005)
+    try:
+        expected_dump_stride(bad)
+    except RuntimeError:
+        return
+    raise AssertionError("expected_dump_stride should reject non-integer dump cadence")
+
+
+def test_particle_major_r_tilde_matches_frame_major():
+    with tempfile.TemporaryDirectory() as tmp:
+        out_dir = Path(tmp)
+        arr = np.arange(5 * 4 * 2, dtype=np.float32).reshape(5, 4, 2)
+        rt = np.memmap(out_dir / "r_tilde.float32", dtype=np.float32, mode="w+", shape=arr.shape)
+        rt[:] = arr
+        rt.flush()
+        traj = {"r_tilde": np.memmap(out_dir / "r_tilde.float32", dtype=np.float32, mode="r", shape=arr.shape), "meta": {}}
+        rtp = ensure_particle_major_r_tilde(traj, out_dir, chunk=2, rebuild=True)
+        np.testing.assert_allclose(rtp[2], arr[:, 2, :])
+        del rtp
+        del traj
+        del rt
+        gc.collect()
