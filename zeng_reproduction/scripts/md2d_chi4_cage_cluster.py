@@ -3,10 +3,12 @@
 
 import argparse
 import csv
+import gc
 import gzip
 import io
 import json
 import math
+import multiprocessing as mp
 import os
 import shutil
 import subprocess
@@ -44,6 +46,7 @@ class MD2DConfig:
     threshold_tol: float = 0.10
     stz_radius: float = 1.5
     c_prime: float = 2.0
+    cluster_n_starts: int = 10
     r_tilde_method_version: str = "wrapped_sawtooth_v2_shear_origin"
 
 
@@ -68,6 +71,19 @@ def progress_iter(iterable, **kwargs):
     except ImportError:
         return iterable
     return tqdm(iterable, **kwargs)
+
+
+def close_memmap_array(arr):
+    mmap = getattr(arr, "_mmap", None)
+    if mmap is not None:
+        mmap.close()
+
+
+def close_trajectory_array(traj, key):
+    arr = traj.get(key)
+    if isinstance(arr, np.memmap):
+        close_memmap_array(arr)
+        traj[key] = None
 
 
 def trajectory_config(cfg):
@@ -333,17 +349,21 @@ def ensure_particle_major_r_tilde(traj, out_dir, chunk=256, rebuild=False):
     n_frames, n_particles = traj["r_tilde"].shape[:2]
     path = memmap_paths(out_dir)["r_tilde_by_particle"]
     expected_size = n_particles * n_frames * 2 * np.dtype(np.float32).itemsize
-    if path.exists() and path.stat().st_size == expected_size and not rebuild:
+    ready = bool(traj["meta"].get("r_tilde_by_particle_ready", False))
+    if path.exists() and path.stat().st_size == expected_size and ready and not rebuild:
         return np.memmap(path, dtype=np.float32, mode="r", shape=(n_particles, n_frames, 2))
+    meta = dict(traj["meta"])
+    meta["r_tilde_by_particle"] = str(path)
+    meta["r_tilde_by_particle_ready"] = False
+    meta["r_tilde_by_particle_chunk"] = int(chunk)
+    update_manifest(out_dir, meta)
+    traj["meta"] = meta
     rtp = np.memmap(path, dtype=np.float32, mode="w+", shape=(n_particles, n_frames, 2))
     rt = traj["r_tilde"]
-    for p0 in range(0, n_particles, chunk):
+    for p0 in progress_iter(range(0, n_particles, chunk), desc="particle-major r_tilde", unit="chunk"):
         p1 = min(n_particles, p0 + chunk)
         rtp[p0:p1] = np.asarray(rt[:, p0:p1, :]).transpose(1, 0, 2)
-        if p1 % max(chunk, n_particles // 10) == 0 or p1 == n_particles:
-            log("stored particle-major r_tilde {}/{} particles".format(p1, n_particles))
     rtp.flush()
-    meta = dict(traj["meta"])
     meta["r_tilde_by_particle"] = str(path)
     meta["r_tilde_by_particle_ready"] = True
     meta["r_tilde_by_particle_chunk"] = int(chunk)
@@ -368,6 +388,79 @@ def count_overlap_pairs(current, reference, box, cutoff):
     ref = fold_to_triclinic_box(reference, box)
     tree = cKDTree(periodic_images(ref, box))
     return float(np.sum(tree.query_ball_point(cur, cutoff, return_length=True)))
+
+
+def chi4_paths(out_dir):
+    return {
+        "npz": out_dir / "chi4_md2d_gdot0p001.npz",
+        "csv": out_dir / "chi4_md2d_gdot0p001.csv",
+        "json": out_dir / "chi4_md2d_gdot0p001.json",
+    }
+
+
+def chi4_config(cfg, n_frames, n_particles):
+    return {
+        "chi4_max_time": float(cfg.chi4_max_time),
+        "chi4_lag_dt": float(cfg.chi4_lag_dt),
+        "chi4_origin_dt": float(cfg.chi4_origin_dt),
+        "dump_dt": float(cfg.dump_dt),
+        "temperature": float(cfg.temperature),
+        "overlap_a": float(cfg.overlap_a),
+        "gamma_dot": float(cfg.gamma_dot),
+        "n_frames": int(n_frames),
+        "n_particles": int(n_particles),
+        "method": "collective_advected_reference_triclinic_pbc",
+    }
+
+
+def load_chi4_if_compatible(out_dir, cfg, traj):
+    paths = chi4_paths(out_dir)
+    if not paths["npz"].exists() or not paths["json"].exists():
+        return None
+    n_frames, n_particles = traj["positions"].shape[:2]
+    with np.load(paths["npz"], allow_pickle=False) as data:
+        required = {"lags", "lag_times", "chi4", "q_mean", "q_var", "n_origins", "q_values"}
+        if not required.issubset(set(data.files)):
+            return None
+        lags = np.asarray(data["lags"])
+        lag_times = np.asarray(data["lag_times"], dtype=float)
+        chi4 = np.asarray(data["chi4"], dtype=float)
+        q_mean = np.asarray(data["q_mean"], dtype=float)
+        q_var = np.asarray(data["q_var"], dtype=float)
+        n_origins = np.asarray(data["n_origins"], dtype=np.int32)
+        q_values = np.asarray(data["q_values"], dtype=float)
+    if len(lag_times) == 0:
+        return None
+    expected_last = min((n_frames - 1) * cfg.dump_dt, cfg.chi4_max_time)
+    if abs(float(lag_times[-1]) - float(expected_last)) > 1.0e-8:
+        return None
+    if len(lag_times) > 1 and abs(float(lag_times[1] - lag_times[0]) - cfg.chi4_lag_dt) > 1.0e-8:
+        return None
+    summary = json.loads(paths["json"].read_text())
+    if int(summary.get("n_particles", -1)) != int(n_particles):
+        return None
+    if abs(float(summary.get("overlap_a", np.nan)) - cfg.overlap_a) > 1.0e-12:
+        return None
+    result = {
+        "lags": lags,
+        "lag_times": lag_times,
+        "chi4": chi4,
+        "q_mean": q_mean,
+        "q_var": q_var,
+        "n_origins": n_origins,
+        "q_values": q_values,
+        "summary": summary,
+    }
+    log("loaded existing chi4 from {}".format(paths["npz"]))
+    return result
+
+
+def compute_or_load_chi4(traj, out_dir, cfg, force=False):
+    if not force:
+        cached = load_chi4_if_compatible(out_dir, cfg, traj)
+        if cached is not None:
+            return cached
+    return compute_chi4(traj, out_dir, cfg)
 
 
 def compute_chi4(traj, out_dir, cfg):
@@ -415,6 +508,7 @@ def compute_chi4(traj, out_dir, cfg):
         "n_origins": n_origins,
         "q_values": q_values,
         "summary": {
+            "chi4_config": chi4_config(cfg, n_frames, n_particles),
             "method": "collective_advected_reference_triclinic_pbc",
             "t_chi": float(lags[peak] * cfg.dump_dt),
             "lag_frame_chi": int(lags[peak]),
@@ -475,36 +569,97 @@ def empty_jumps(out_dir, reason):
     return jumps
 
 
-def detect_cage_jumps(traj, out_dir, cfg, particle_chunk=256, rebuild_particle=False, detection_mode="formal_full"):
-    r_tilde_by_particle = ensure_particle_major_r_tilde(traj, out_dir, chunk=particle_chunk, rebuild=rebuild_particle)
-    positions = traj["positions"]
-    boxes = traj["boxes"]
+_CAGE_WORKER = {}
+
+
+def particle_ranges(n_particles, chunk):
+    return [(p0, min(n_particles, p0 + chunk)) for p0 in range(0, n_particles, chunk)]
+
+
+def _init_cage_worker(rtp_path, pos_path, n_particles, n_frames, boxes, times, cfg_dict):
+    _CAGE_WORKER["r_tilde_by_particle"] = np.memmap(rtp_path, dtype=np.float32, mode="r", shape=(n_particles, n_frames, 2))
+    _CAGE_WORKER["positions"] = np.memmap(pos_path, dtype=np.float32, mode="r", shape=(n_frames, n_particles, 2))
+    _CAGE_WORKER["boxes"] = boxes
+    _CAGE_WORKER["times"] = times
+    _CAGE_WORKER["cfg"] = MD2DConfig(**cfg_dict)
+
+
+def _detect_cage_chunk(args):
+    p0, p1 = args
+    rtp = _CAGE_WORKER["r_tilde_by_particle"]
+    positions = _CAGE_WORKER["positions"]
+    boxes = _CAGE_WORKER["boxes"]
+    times = _CAGE_WORKER["times"]
+    cfg = _CAGE_WORKER["cfg"]
     particle_ids = []
     jump_frames = []
     jump_times = []
     jump_positions = []
     jump_vectors = []
-    n_particles = r_tilde_by_particle.shape[0]
-    for pi in range(n_particles):
-        traj_i = r_tilde_by_particle[pi].astype(np.float64)
+    for pi in range(p0, p1):
+        traj_i = rtp[pi].astype(np.float64)
         frames = sorted(set(find_cage_jumps_recursive(traj_i, cfg.lc2, min_segment=cfg.cage_min_segment)))
         for frame in frames:
             box = box_dict(boxes[frame])
             particle_ids.append(pi + 1)
             jump_frames.append(frame)
-            jump_times.append(float(traj["times"][frame]))
+            jump_times.append(float(times[frame]))
             jump_positions.append(fold_to_cosheared_box(positions[frame, pi][None, :], box)[0])
             jump_vectors.append(jump_vector_from_particle_traj(traj_i, frame, cfg.jump_vector_window))
-        if (pi + 1) % max(1, n_particles // 20) == 0:
-            log("cage detection {}/{} particles, events={}".format(pi + 1, n_particles, len(jump_frames)))
-
-    jumps = {
+    return {
         "particle_id": np.asarray(particle_ids, dtype=np.int32),
         "jump_frame": np.asarray(jump_frames, dtype=np.int32),
         "jump_time": np.asarray(jump_times, dtype=np.float64),
         "jump_position": np.asarray(jump_positions, dtype=np.float32).reshape((-1, 2)),
         "jump_vector": np.asarray(jump_vectors, dtype=np.float32).reshape((-1, 2)),
+        "particles_done": int(p1 - p0),
     }
+
+
+def concatenate_jump_chunks(chunks):
+    keys = ["particle_id", "jump_frame", "jump_time", "jump_position", "jump_vector"]
+    if not chunks:
+        return {
+            "particle_id": np.empty(0, dtype=np.int32),
+            "jump_frame": np.empty(0, dtype=np.int32),
+            "jump_time": np.empty(0, dtype=np.float64),
+            "jump_position": np.empty((0, 2), dtype=np.float32),
+            "jump_vector": np.empty((0, 2), dtype=np.float32),
+        }
+    return {key: np.concatenate([chunk[key] for chunk in chunks], axis=0) for key in keys}
+
+
+def detect_cage_jumps(traj, out_dir, cfg, particle_chunk=256, rebuild_particle=False, detection_mode="formal_full", cage_workers=1):
+    r_tilde_by_particle = ensure_particle_major_r_tilde(traj, out_dir, chunk=particle_chunk, rebuild=rebuild_particle)
+    close_trajectory_array(traj, "r_tilde")
+    gc.collect()
+    positions = traj["positions"]
+    boxes = traj["boxes"]
+    n_particles = r_tilde_by_particle.shape[0]
+    ranges = particle_ranges(n_particles, max(1, int(particle_chunk)))
+    chunks = []
+    if int(cage_workers) <= 1:
+        _init_cage_worker(str(memmap_paths(out_dir)["r_tilde_by_particle"]), str(memmap_paths(out_dir)["positions"]), n_particles, r_tilde_by_particle.shape[1], boxes, traj["times"], asdict(cfg))
+        iterator = (_detect_cage_chunk(item) for item in ranges)
+        for chunk in progress_iter(iterator, total=len(ranges), desc="cage chunks", unit="chunk"):
+            chunks.append(chunk)
+    else:
+        ctx = mp.get_context("spawn")
+        with ctx.Pool(
+            processes=int(cage_workers),
+            initializer=_init_cage_worker,
+            initargs=(str(memmap_paths(out_dir)["r_tilde_by_particle"]), str(memmap_paths(out_dir)["positions"]), n_particles, r_tilde_by_particle.shape[1], boxes, traj["times"], asdict(cfg)),
+        ) as pool:
+            iterator = pool.imap_unordered(_detect_cage_chunk, ranges)
+            for chunk in progress_iter(iterator, total=len(ranges), desc="cage chunks", unit="chunk"):
+                chunks.append(chunk)
+    jumps = concatenate_jump_chunks(chunks)
+    order = np.lexsort((jumps["jump_frame"], jumps["particle_id"])) if len(jumps["jump_frame"]) else np.empty(0, dtype=np.int64)
+    if len(order):
+        for key in jumps:
+            jumps[key] = jumps[key][order]
+    del r_tilde_by_particle
+    gc.collect()
     np.savez_compressed(out_dir / "cage_jumps_md2d_gdot0p001.npz", **jumps, lc2=np.array(cfg.lc2), detection_mode=np.array(detection_mode))
     return jumps
 
@@ -599,16 +754,33 @@ def window_points(jumps, start, t_chi, box_lengths):
     return mask, points
 
 
-def density_selected_window(jumps, t_chi, times, cfg, box_lengths):
+def parse_start_times(text):
+    if not text:
+        return None
+    return np.asarray([float(part.strip()) for part in text.split(",") if part.strip()], dtype=np.float64)
+
+
+def cluster_candidate_starts(times, t_chi, cfg, start_times=None):
+    start_min = float(times[0])
+    start_max = max(float(times[-1]) - float(t_chi), start_min)
+    if start_times is not None:
+        starts = np.asarray(start_times, dtype=np.float64)
+        return starts[(starts >= start_min) & (starts <= start_max)]
+    if int(cfg.cluster_n_starts) <= 0:
+        stride = max(cfg.dump_dt, t_chi / 10.0)
+        return np.arange(start_min, start_max + stride, stride)
+    if int(cfg.cluster_n_starts) == 1:
+        return np.asarray([start_min], dtype=np.float64)
+    return np.linspace(start_min, start_max, int(cfg.cluster_n_starts), dtype=np.float64)
+
+
+def density_selected_window(jumps, t_chi, times, cfg, box_lengths, start_times=None):
     if len(jumps["jump_time"]) == 0 or t_chi <= 0.0:
         return empty_window(jumps, t_chi, times), None, 0.0, "none"
 
-    stride = max(cfg.dump_dt, t_chi / 10.0)
-    starts = np.arange(
-        float(times[0]),
-        max(float(times[-1]) - t_chi, float(times[0])) + stride,
-        stride,
-    )
+    starts = cluster_candidate_starts(times, t_chi, cfg, start_times=start_times)
+    if len(starts) == 0:
+        return empty_window(jumps, t_chi, times), None, 0.0, "none"
 
     order = np.argsort(jumps["jump_time"])
     jump_time_sorted = jumps["jump_time"][order]
@@ -636,7 +808,7 @@ def density_selected_window(jumps, t_chi, times, cfg, box_lengths):
         _, component, _ = component_from_density(density, rho_i, cfg, box_lengths)
 
         score = float(np.max(density))
-        candidate = {"start": start, "points": points, "density": density, "score": score, "rho_th": rho_i}
+        candidate = {"start": start, "points": points, "density": density, "score": score, "rho_th": rho_i, "n_start_candidates": int(len(starts))}
         if best_any is None or score > best_any["score"]:
             best_any = candidate
         if component and (best_valid is None or score > best_valid["score"]):
@@ -655,9 +827,9 @@ def density_selected_window(jumps, t_chi, times, cfg, box_lengths):
     return window, best, float(best["rho_th"]), selection
 
 
-def build_cluster_density(jumps, t_chi, traj, out_dir, cfg):
+def build_cluster_density(jumps, t_chi, traj, out_dir, cfg, start_times=None):
     box_lengths = traj["boxes"][0, 2:4].astype(np.float64)
-    window, best, rho_th, window_selection = density_selected_window(jumps, t_chi, traj["times"], cfg, box_lengths)
+    window, best, rho_th, window_selection = density_selected_window(jumps, t_chi, traj["times"], cfg, box_lengths, start_times=start_times)
     reference_time = window["end"]
     points = best["points"] if best is not None else np.empty((0, 2), dtype=np.float64)
     if len(points) == 0:
@@ -672,6 +844,7 @@ def build_cluster_density(jumps, t_chi, traj, out_dir, cfg):
             "reference_time": float(reference_time),
             "min_voxels": 0,
             "window_selection": window_selection,
+            "n_start_candidates": 0,
             "coordinate_system": "co_sheared_orthogonal_box",
         }
         np.savez_compressed(out_dir / "cluster_md2d_gdot0p001.npz", **empty)
@@ -691,6 +864,7 @@ def build_cluster_density(jumps, t_chi, traj, out_dir, cfg):
         "reference_time": float(reference_time),
         "min_voxels": int(min_voxels),
         "window_selection": window_selection,
+        "n_start_candidates": int(best.get("n_start_candidates", 0)),
         "coordinate_system": "co_sheared_orthogonal_box",
     }
     np.savez_compressed(out_dir / "cluster_md2d_gdot0p001.npz", **result)
@@ -748,6 +922,7 @@ def plot_outputs(out_dir, cfg, chi4, jumps, window, cluster, cage_detection_mode
         "window_selection": str(cluster["window_selection"]),
         "coordinate_system": str(cluster["coordinate_system"]),
         "cluster_analysis_scope": "representative_visualization",
+        "n_start_candidates": int(cluster.get("n_start_candidates", 0)),
         "cage_detection_mode": str(cage_detection_mode),
         "n_total_jumps": int(len(jumps["jump_time"])),
         "n_window_jumps": int(window["n_jumps"]),
@@ -771,6 +946,10 @@ def parse_args():
     parser.add_argument("--allow-short-cage", action="store_true", help="Allow diagnostic Candelier detection on a short max-frames trajectory")
     parser.add_argument("--min-cage-frames", type=int, default=10000)
     parser.add_argument("--particle-chunk", type=int, default=256)
+    parser.add_argument("--cage-workers", type=int, default=1)
+    parser.add_argument("--cluster-n-starts", type=int, default=10, help="Number of evenly spaced t_chi windows to test; 0 restores exhaustive scan")
+    parser.add_argument("--cluster-start-times", default=None, help="Comma-separated explicit t_ini values; overrides --cluster-n-starts")
+    parser.add_argument("--force-chi4", action="store_true", help="Recompute chi4 even when compatible chi4 outputs already exist")
     parser.add_argument("--rebuild", action="store_true")
     return parser.parse_args()
 
@@ -787,6 +966,8 @@ def main():
         cfg.chi4_origin_dt = args.chi4_origin_dt
     if args.shear_origin_y is not None:
         cfg.shear_origin_y = args.shear_origin_y
+    cfg.cluster_n_starts = int(args.cluster_n_starts)
+    cluster_start_times = parse_start_times(args.cluster_start_times)
     suffix = "gdot0p001" if not args.max_frames else "gdot0p001_smoke_{}f".format(args.max_frames)
     out_dir = repo / "zeng_reproduction" / "data" / "MD" / "2D" / "processed" / "chi4_cage_cluster" / args.run_group / suffix
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -794,7 +975,9 @@ def main():
     log("building/loading r_tilde from {}".format(dump))
     traj = build_r_tilde(dump, out_dir, cfg, max_frames=args.max_frames, rebuild=args.rebuild)
     log("computing chi4")
-    chi4 = compute_chi4(traj, out_dir, cfg)
+    chi4 = compute_or_load_chi4(traj, out_dir, cfg, force=args.force_chi4 or args.rebuild)
+    close_trajectory_array(traj, "affine_x")
+    gc.collect()
     if chi4["summary"]["peak_at_lag_boundary"]:
         log("WARNING: chi4 peak is on lag boundary; increase chi4_max_time before final use")
     n_frames = traj["r_tilde"].shape[0]
@@ -803,15 +986,20 @@ def main():
         log("skipping cage detection")
         cage_detection_mode = "skipped"
         jumps = empty_jumps(out_dir, cage_detection_mode)
+        close_trajectory_array(traj, "r_tilde")
+        close_trajectory_array(traj, "positions")
+        gc.collect()
     elif args.max_frames and n_frames < args.min_cage_frames and not args.allow_short_cage:
         raise RuntimeError("Short trajectory has {} frames; use --skip-cage for diagnostics or --allow-short-cage for explicit smoke testing".format(n_frames))
     else:
         if args.max_frames and n_frames < args.min_cage_frames:
             cage_detection_mode = "short_diagnostic"
         log("detecting cage jumps ({})".format(cage_detection_mode))
-        jumps = detect_cage_jumps(traj, out_dir, cfg, particle_chunk=args.particle_chunk, rebuild_particle=args.rebuild, detection_mode=cage_detection_mode)
+        jumps = detect_cage_jumps(traj, out_dir, cfg, particle_chunk=args.particle_chunk, rebuild_particle=args.rebuild, detection_mode=cage_detection_mode, cage_workers=args.cage_workers)
+        close_trajectory_array(traj, "positions")
+        gc.collect()
     log("building cluster")
-    window, cluster = build_cluster_density(jumps, chi4["summary"]["t_chi"], traj, out_dir, cfg)
+    window, cluster = build_cluster_density(jumps, chi4["summary"]["t_chi"], traj, out_dir, cfg, start_times=cluster_start_times)
     plot_outputs(out_dir, cfg, chi4, jumps, window, cluster, cage_detection_mode)
     log("wrote outputs under {}".format(out_dir))
 
