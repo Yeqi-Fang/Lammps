@@ -14,6 +14,7 @@ import io
 import json
 import math
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -36,14 +37,22 @@ def log(message):
 
 
 def open_dump_text(path):
-    """Open a gzip LAMMPS dump as text, using system gzip for speed."""
-    proc = subprocess.Popen(["gzip", "-dc", str(path)], stdout=subprocess.PIPE)
-    stream = io.TextIOWrapper(proc.stdout, encoding="ascii", errors="replace", newline="")
-    return proc, stream
+    """Open a gzip LAMMPS dump as text.
+
+    Prefer system gzip for speed on Linux, but fall back to Python gzip on
+    Windows workstations where gzip.exe is often unavailable.
+    """
+    if shutil.which("gzip"):
+        proc = subprocess.Popen(["gzip", "-dc", str(path)], stdout=subprocess.PIPE)
+        stream = io.TextIOWrapper(proc.stdout, encoding="ascii", errors="replace", newline="")
+        return proc, stream
+    return None, gzip.open(str(path), "rt", encoding="ascii", errors="replace", newline="")
 
 
 def close_dump_text(proc, stream, allow_sigpipe=False):
     stream.close()
+    if proc is None:
+        return
     rc = proc.wait()
     if allow_sigpipe and rc in (-13, 141):
         return
@@ -136,6 +145,44 @@ def cosheared_fractional(xy, box):
     sx = sx - np.floor(sx)
     sy = sy - np.floor(sy)
     return np.column_stack((sx, sy))
+
+
+def wrapped_y_average(prev_y, curr_y, ylo, ly):
+    """Average wrapped y along one minimum-image step.
+
+    The Lees-Edwards streaming velocity uses the wrapped/co-sheared y in the
+    primary box. A plain 0.5*(y0+y1) is wrong when the particle crosses the
+    y-periodic boundary, because wrapped y has a sawtooth discontinuity there.
+    """
+    y0 = np.mod((prev_y - ylo) / ly, 1.0)
+    y1_wrapped = np.mod((curr_y - ylo) / ly, 1.0)
+    ds = y1_wrapped - y0
+    ds -= np.rint(ds)
+    y1 = y0 + ds
+    avg = np.empty_like(y0, dtype=np.float64)
+
+    inside = (y1 >= 0.0) & (y1 < 1.0)
+    avg[inside] = 0.5 * (y0[inside] + y1[inside])
+
+    up = y1 >= 1.0
+    if np.any(up):
+        alpha = (1.0 - y0[up]) / ds[up]
+        y1_wrapped = y1[up] - np.floor(y1[up])
+        avg[up] = (
+            0.5 * (y0[up] + 1.0) * alpha
+            + 0.5 * y1_wrapped * (1.0 - alpha)
+        )
+
+    down = y1 < 0.0
+    if np.any(down):
+        alpha = (0.0 - y0[down]) / ds[down]
+        y1_wrapped = y1[down] - np.floor(y1[down])
+        avg[down] = (
+            0.5 * y0[down] * alpha
+            + 0.5 * (1.0 + y1_wrapped) * (1.0 - alpha)
+        )
+
+    return ylo + ly * avg
 
 
 def expected_selected_frames(gdot, dump_dt, sample_dt, dt, prod_strain):
@@ -253,7 +300,8 @@ def build_sampled_trajectory(dump, run, args, run_out):
     traj = np.memmap(mmap_path, dtype=np.float32, mode="w+", shape=(selected_expected, n_atoms, 2))
     times = np.empty(selected_expected, dtype=np.float64)
     steps = np.empty(selected_expected, dtype=np.int64)
-    max_abs_ds = 0.0
+    max_abs_nonaffine_step = 0.0
+    p95_nonaffine_step_samples = []
     first_columns = None
     first_box = None
     last_box = None
@@ -261,35 +309,49 @@ def build_sampled_trajectory(dump, run, args, run_out):
     proc, stream = open_dump_text(dump)
     raw_i = 0
     selected_i = 0
-    prev_frac = None
-    frac_unwrapped = None
+    prev_xy = None
+    prev_step = None
+    acc = np.zeros((n_atoms, 2), dtype=np.float64)
     try:
         while True:
-            parse = (raw_i % frame_stride == 0)
-            frame = read_frame(stream, parse_atoms=parse)
+            frame = read_frame(stream, parse_atoms=True)
             if frame is None:
                 break
             step, n_frame_atoms, box, columns, xy = frame
             if n_frame_atoms != n_atoms:
                 raise RuntimeError("Expected {} atoms, got {} at step {}".format(n_atoms, n_frame_atoms, step))
-            if parse:
+            if prev_xy is not None:
+                dt_frame = float(step - prev_step) * float(args.dt)
+                lx = float(box["lx"])
+                ly = float(box["ly"])
+                xy_tilt = float(box["xy"])
+
+                dx = xy[:, 0].astype(np.float64) - prev_xy[:, 0]
+                dy = xy[:, 1].astype(np.float64) - prev_xy[:, 1]
+
+                n_y = np.round(dy / ly)
+                dy -= n_y * ly
+
+                dx -= n_y * xy_tilt
+                n_x = np.round(dx / lx)
+                dx -= n_x * lx
+
+                affine_y = wrapped_y_average(prev_xy[:, 1], xy[:, 1], box["ylo"], ly)
+                dx -= float(run["gdot"]) * dt_frame * affine_y
+
+                acc[:, 0] += dx
+                acc[:, 1] += dy
+                step_len = np.sqrt(dx * dx + dy * dy)
+                max_abs_nonaffine_step = max(max_abs_nonaffine_step, float(np.max(step_len)))
+                if raw_i % max(1, raw_frames // 200) == 0:
+                    p95_nonaffine_step_samples.append(float(np.percentile(step_len, 95.0)))
+
+            if raw_i % frame_stride == 0:
                 if selected_i >= selected_expected:
                     raise RuntimeError("More selected frames than expected for {}".format(run["label"]))
-                frac = cosheared_fractional(xy, box)
-                if prev_frac is None:
-                    frac_unwrapped = frac.copy()
-                else:
-                    ds = frac - prev_frac
-                    ds -= np.rint(ds)
-                    max_abs_ds = max(max_abs_ds, float(np.max(np.abs(ds))))
-                    frac_unwrapped += ds
-                rt = np.empty((n_atoms, 2), dtype=np.float32)
-                rt[:, 0] = (frac_unwrapped[:, 0] * box["lx"]).astype(np.float32)
-                rt[:, 1] = (frac_unwrapped[:, 1] * box["ly"]).astype(np.float32)
-                traj[selected_i, :, :] = rt
+                traj[selected_i, :, :] = acc.astype(np.float32)
                 times[selected_i] = step * args.dt
                 steps[selected_i] = step
-                prev_frac = frac
                 if first_columns is None:
                     first_columns = list(columns)
                     first_box = dict(box)
@@ -297,6 +359,8 @@ def build_sampled_trajectory(dump, run, args, run_out):
                 selected_i += 1
                 if selected_i % 1000 == 0:
                     log("  {} sampled {}/{} frames".format(run["label"], selected_i, selected_expected))
+            prev_xy = xy.astype(np.float64, copy=True)
+            prev_step = step
             raw_i += 1
     finally:
         close_dump_text(proc, stream)
@@ -311,7 +375,12 @@ def build_sampled_trajectory(dump, run, args, run_out):
         "frame_stride": int(frame_stride),
         "sampled_frames": int(selected_i),
         "sample_dt": float(args.sample_dt),
-        "max_abs_fractional_step_between_sampled_frames": float(max_abs_ds),
+        "trajectory_mode": "incremental_nonaffine_like_md3d",
+        "affine_y": "wrapped_sawtooth_average",
+        "max_abs_nonaffine_raw_step": float(max_abs_nonaffine_step),
+        "p95_nonaffine_raw_step_sample_mean": (
+            float(np.mean(p95_nonaffine_step_samples)) if p95_nonaffine_step_samples else None
+        ),
         "dump_columns": first_columns,
         "first_box": first_box,
         "last_box": last_box,
@@ -396,7 +465,8 @@ def compute_msd_fsqt(traj, times, qstar, args, run_label):
 
 
 def save_run_outputs(run_out, run, qstar, times, steps, traj_meta, result):
-    npz_path = run_out / "msd_fsqt_sampledt5.npz"
+    sample_tag = str(traj_meta["sample_dt"]).replace(".", "p").replace("-", "m")
+    npz_path = run_out / "msd_fsqt_sampledt{}.npz".format(sample_tag)
     np.savez_compressed(
         npz_path,
         gdot=np.array(run["gdot"], dtype=np.float64),
@@ -413,7 +483,7 @@ def save_run_outputs(run_out, run, qstar, times, steps, traj_meta, result):
         sample_dt=np.array(traj_meta["sample_dt"], dtype=np.float64),
     )
 
-    csv_path = run_out / "msd_fsqt_sampledt5.csv"
+    csv_path = run_out / "msd_fsqt_sampledt{}.csv".format(sample_tag)
     with csv_path.open("w", newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow(["lag_frames", "lag_time", "msd", "msd_x", "msd_y", "fsqt", "n_origins"])
@@ -488,7 +558,10 @@ def plot_outputs(out_dir, summaries):
     for ax in axes:
         ax.legend(frameon=False, fontsize=7)
     fig.tight_layout()
-    path = out_dir / "msd_fsqt_all_rates.png"
+    if len(summaries) == 1:
+        path = out_dir / "msd_fsqt_{}_incremental.png".format(summaries[0]["label"])
+    else:
+        path = out_dir / "msd_fsqt_all_rates_incremental.png"
     fig.savefig(str(path))
     plt.close(fig)
     return path
@@ -510,6 +583,11 @@ def main(argv=None):
     parser.add_argument("--q-min", type=float, default=2.5)
     parser.add_argument("--q-max", type=float, default=9.5)
     parser.add_argument("--q-bin-width", type=float, default=0.05)
+    parser.add_argument(
+        "--labels",
+        default=",".join(run["label"] for run in RUNS),
+        help="Comma-separated run labels to analyze, e.g. gdot0p001",
+    )
     parser.add_argument("--keep-memmap", action="store_true")
     args = parser.parse_args(argv)
 
@@ -531,8 +609,16 @@ def main(argv=None):
     log("selected q* = {:.6f}".format(qstar))
     (out_dir / "qstar_metadata.json").write_text(json.dumps(qstar_meta, indent=2, sort_keys=True))
 
+    selected_labels = [x.strip() for x in args.labels.split(",") if x.strip()]
+    selected_runs = [run for run in RUNS if run["label"] in selected_labels]
+    missing = sorted(set(selected_labels) - set(run["label"] for run in RUNS))
+    if missing:
+        raise SystemExit("Unknown run labels: {}".format(", ".join(missing)))
+    if not selected_runs:
+        raise SystemExit("No runs selected")
+
     summaries = []
-    for run in RUNS:
+    for run in selected_runs:
         run_out = out_dir / run["label"]
         run_out.mkdir(parents=True, exist_ok=True)
         dump = find_dump(raw_base, args.run_group, run["label"])
@@ -560,8 +646,9 @@ def main(argv=None):
         "summaries": summaries,
         "plot": str(plot_path) if plot_path is not None else None,
         "notes": [
-            "Coordinates are fractional-unwrapped in the instantaneous triclinic cell, then mapped to an orthogonal co-sheared frame.",
-            "This avoids using ordinary unwrapped y as the shear-flow coordinate.",
+            "Coordinates are accumulated with the same incremental nonaffine Lees-Edwards logic used in the 3D trial script.",
+            "Each raw dump interval is unwrapped by wrapped-position minimum-image increments, then gamma_dot * dt * wrapped/co-sheared y is subtracted. The wrapped-y average treats y-boundary crossings as a sawtooth, not as an ordinary endpoint average.",
+            "This avoids using ordinary unwrapped y as the shear-flow coordinate and avoids skipping box-flip/boundary events between sampled frames.",
             "q* is estimated from production frames because this run group did not save an equilibrium dump trajectory.",
         ],
     }
